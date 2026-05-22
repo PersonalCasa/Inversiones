@@ -36,6 +36,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 .refresh-btn{background:none;border:1px solid var(--border);border-radius:7px;
   padding:5px 9px;color:var(--muted);cursor:pointer;font-size:13px;transition:all .2s}
 .refresh-btn:active{color:var(--accent);border-color:var(--accent)}
+.eye-btn{background:none;border:1px solid var(--border);border-radius:7px;
+  padding:5px 9px;color:var(--muted);cursor:pointer;font-size:13px;transition:all .2s}
+.eye-btn.hidden-mode{color:var(--accent);border-color:var(--accent)}
+.val-hidden{filter:blur(8px);user-select:none;pointer-events:none}
+.dots-val{letter-spacing:2px;color:var(--muted)}
 
 .page{display:none;padding:14px 14px 8px;animation:fu .25s ease}
 .page.active{display:block}
@@ -231,10 +236,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   </div>
   <div id="authBio" style="display:none;flex-direction:column;align-items:center">
     <div class="auth-finger" onclick="triggerBiometric()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="38" height="38">
-        <path d="M12 2a7 7 0 0 1 7 7c0 5-3.5 9.5-7 11-3.5-1.5-7-6-7-11a7 7 0 0 1 7-7z"/>
-        <path d="M12 6a3 3 0 0 1 3 3c0 3-1.5 5.5-3 7-1.5-1.5-3-4-3-7a3 3 0 0 1 3-3z"/>
-        <line x1="12" y1="10" x2="12" y2="13"/>
+      <svg viewBox="0 0 50 60" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="38" height="46">
+        <ellipse cx="25" cy="22" rx="18" ry="20" stroke="currentColor" stroke-width="1.8" fill="none"/>
+        <path d="M11 22c0-7.7 6.3-14 14-14s14 6.3 14 14c0 10-5 18-14 22-9-4-14-12-14-22z"/>
+        <path d="M17 22c0-4.4 3.6-8 8-8s8 3.6 8 8c0 6-3 11-8 13-5-2-8-7-8-13z"/>
+        <path d="M21 22c0-2.2 1.8-4 4-4s4 1.8 4 4c0 3-1.5 5.5-4 7-2.5-1.5-4-4-4-7z"/>
+        <line x1="25" y1="26" x2="25" y2="50" stroke-width="1.4" opacity="0.4"/>
       </svg>
     </div>
     <div class="auth-msg" id="bioMsg">Tocá para autenticar</div>
@@ -266,6 +273,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <div class="topbar-title">INVERSIONES</div>
   </div>
   <div class="topbar-right">
+    <button class="eye-btn" id="eyeBtn" onclick="toggleValues()" title="Mostrar/ocultar valores">👁</button>
     <div class="upd" id="lastUpd">—</div>
     <button class="refresh-btn" onclick="refreshAll()" title="Actualizar">⟳</button>
   </div>
@@ -276,11 +284,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   <div class="alert-banner" id="alertBanner"></div>
   <div class="total-card">
     <div class="total-lbl">Portfolio bursátil</div>
-    <div class="total-amt"><span class="cur">U$S </span><span id="tVal">—</span></div>
+    <div class="total-amt"><span class="cur">U$S </span><span id="tVal" class="val-mask">—</span></div>
     <div class="total-meta">
-      <div class="mc"><div class="ml">Invertido</div><div class="mv" id="tInv">—</div></div>
-      <div class="mc"><div class="ml">Ganancia</div><div class="mv" id="tGain">—</div></div>
-      <div class="mc"><div class="ml">Hoy</div><div class="mv" id="tDay">—</div></div>
+      <div class="mc"><div class="ml">Invertido</div><div class="mv val-mask" id="tInv">—</div></div>
+      <div class="mc"><div class="ml">Ganancia</div><div class="mv val-mask" id="tGain">—</div></div>
+      <div class="mc"><div class="ml">Hoy</div><div class="mv val-mask" id="tDay">—</div></div>
     </div>
   </div>
   <div class="sec">Posiciones <span style="margin-left:5px"><span class="live-dot"></span> <span id="pStat" style="font-size:8px;color:var(--muted)">cargando...</span></span></div>
@@ -318,7 +326,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   <div class="sec" style="margin-top:4px">Patrimonio total</div>
   <div class="total-card">
     <div class="total-lbl">Total estimado</div>
-    <div class="total-amt"><span class="cur">U$S </span><span id="patTotal">—</span></div>
+    <div class="total-amt"><span class="cur">U$S </span><span id="patTotal" class="val-mask">—</span></div>
   </div>
   <div class="card" id="patDetalle"></div>
 </div>
@@ -475,15 +483,15 @@ function renderHoldings(){
       <div class="hm" onclick="togH(${h.id})">
         <div><div class="ht">${h.ticker}</div><div class="hn">${h.name||''} · ${h.units.toFixed(4)} u.</div></div>
         <div>
-          <div class="hv">U$S ${val.toFixed(2)}</div>
+          <div class="hv val-mask">U$S ${val.toFixed(2)}</div>
           <div class="hc ${dc}">${(h.dayChange||0)>=0?'+':''}${(h.dayChange||0).toFixed(2)}% hoy &nbsp;<span class="${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}% total</span></div>
         </div>
       </div>
       <div class="hdet" id="hd-${h.id}">
         <div class="dgrid">
-          <div><div class="dl">Precio compra</div><div class="dv">U$S ${h.buyPrice.toFixed(2)}</div></div>
-          <div><div class="dl">Precio actual</div><div class="dv">U$S ${h.currentPrice.toFixed(2)}</div></div>
-          <div><div class="dl">Ganancia U$S</div><div class="dv ${gc}">${gain>=0?'+':''}${gain.toFixed(2)}</div></div>
+          <div><div class="dl">Precio compra</div><div class="dv val-mask">U$S ${h.buyPrice.toFixed(2)}</div></div>
+          <div><div class="dl">Precio actual</div><div class="dv val-mask">U$S ${h.currentPrice.toFixed(2)}</div></div>
+          <div><div class="dl">Ganancia U$S</div><div class="dv val-mask ${gc}">${gain>=0?'+':''}${gain.toFixed(2)}</div></div>
           <div><div class="dl">Ganancia %</div><div class="dv ${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}%</div></div>
         </div>
         <div class="irow"><span class="ilbl">Precio actual</span><input class="inp" id="ip-${h.id}" type="number" step="0.01" value="${h.currentPrice.toFixed(2)}"></div>
@@ -512,7 +520,7 @@ function saveH(id){
   const p=parseFloat(document.getElementById('ip-'+id).value);
   const u=parseFloat(document.getElementById('iu-'+id).value);
   if(!isNaN(p)) h.currentPrice=p; if(!isNaN(u)) h.units=u;
-  save(); renderHoldings(); document.getElementById('hd-'+id).classList.remove('open');
+  save(); renderHoldings(); document.getElementById('hd-'+id).classList.remove('open'); applyValuesState();
 }
 function delH(id){
   if(!confirm('¿Eliminar?')) return;
@@ -561,7 +569,7 @@ function renderPlan(){
     {m:'Sep 2026',t:'SPY',a:'U$S 250',done:false,cur:false},
     {m:'Oct 2026',t:'GLD',a:'U$S 250',done:false,cur:false},
     {m:'Nov 2026',t:'SPY',a:'U$S 250',done:false,cur:false},
-    {m:'Dic 2026',t:'NVDA / agresivo',a:'U$S 250',done:false,cur:false},
+    {m:'Dic 2026',t:'Agresivo',a:'U$S 250',done:false,cur:false},
   ];
   document.getElementById('planCard').innerHTML=plan.map(p=>`
     <div class="pr ${p.done?'done':''} ${p.cur?'cur':''}">
@@ -720,7 +728,7 @@ function renderActivos(){
       <div class="ah" onclick="togA(${a.id})">
         <div style="display:flex;align-items:center"><span class="ai">${a.icon}</span>
           <div><div class="an">${a.name}</div><div class="aty">${a.type}</div></div></div>
-        <div><div class="av">U$S ${(a.valor||0).toLocaleString()}</div>
+        <div><div class="av val-mask">U$S ${(a.valor||0).toLocaleString()}</div>
         <div class="ar2 ${neto>=0?'green':'red'}">${neto>=0?'+':''}U$S ${neto.toFixed(0)}/mes</div></div>
       </div>
       <div class="ab" id="ab-${a.id}">
@@ -771,7 +779,7 @@ function renderPatrimonio(){
   const colors=['var(--accent)','var(--accent2)','var(--gold)','#ff9a3c','var(--accent3)'];
   const items=[{l:'Portfolio bursátil',v:bursatil,c:'var(--accent)'},...S.activos.map((a,i)=>({l:a.name,v:a.valor||0,c:colors[(i+1)%colors.length]}))];
   document.getElementById('patDetalle').innerHTML=items.map(i=>`
-    <div class="pat-row"><span><span class="pdot" style="background:${i.c}"></span>${i.l}</span><span>U$S ${(i.v||0).toLocaleString()}</span></div>`).join('');
+    <div class="pat-row"><span><span class="pdot" style="background:${i.c}"></span>${i.l}</span><span class="val-mask">U$S ${(i.v||0).toLocaleString()}</span></div>`).join('');
 }
 
 function init(){
@@ -783,6 +791,7 @@ function init(){
       d.toLocaleDateString('es-UY',{day:'2-digit',month:'short'});
   }
   setTimeout(refreshAll,800);
+  applyValuesState();
   if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
 // ══ AUTH SYSTEM ══
@@ -1000,6 +1009,52 @@ function initAuth(){
     showPinLogin();
   }
 }
+
+// ══ HIDE VALUES SYSTEM ══
+let valuesHidden = true; // Oculto por defecto
+
+function toggleValues(){
+  valuesHidden = !valuesHidden;
+  applyValuesState();
+}
+
+function applyValuesState(){
+  const btn = document.getElementById('eyeBtn');
+  if(!btn) return;
+  if(valuesHidden){
+    btn.textContent = '🙈';
+    btn.classList.add('hidden-mode');
+    document.querySelectorAll('.val-mask').forEach(el => {
+      el.classList.add('val-hidden');
+    });
+  } else {
+    btn.textContent = '👁';
+    btn.classList.remove('hidden-mode');
+    document.querySelectorAll('.val-mask').forEach(el => {
+      el.classList.remove('val-hidden');
+    });
+  }
+}
+
+// Re-auth y ocultar al volver de segundo plano
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden){
+    // App fue a segundo plano — marcar para re-auth
+    sessionStorage.setItem('needReauth', '1');
+    valuesHidden = true;
+  } else {
+    // Volvió al primer plano
+    if(sessionStorage.getItem('needReauth') === '1'){
+      sessionStorage.removeItem('needReauth');
+      // Ocultar app y pedir auth de nuevo
+      document.getElementById('appContent').style.display = 'none';
+      document.getElementById('authScreen').classList.remove('hidden');
+      const auth = getAuth();
+      if(auth?.type === 'bio') showBioLogin();
+      else showPinLogin();
+    }
+  }
+});
 
 initAuth();
 

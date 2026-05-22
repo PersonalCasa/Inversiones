@@ -169,10 +169,98 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 .live-dot{width:5px;height:5px;background:var(--accent);border-radius:50%;
   display:inline-block;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── AUTH SCREEN ── */
+#authScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:32px 24px;
+  animation:fu .3s ease;
+}
+#authScreen.hidden{display:none}
+.auth-logo{width:72px;height:72px;border-radius:18px;margin-bottom:20px}
+.auth-title{font-family:'Fraunces',serif;font-size:26px;font-weight:300;margin-bottom:6px}
+.auth-title span{font-style:italic;color:var(--accent)}
+.auth-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:48px}
+.auth-finger{
+  width:80px;height:80px;border-radius:50%;
+  background:rgba(0,212,168,.08);border:2px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;margin-bottom:20px;
+  transition:all .2s;
+  animation:breathe 3s ease-in-out infinite;
+}
+.auth-finger:active{transform:scale(0.92);background:rgba(0,212,168,.2)}
+.auth-finger svg{width:36px;height:36px;color:var(--accent)}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(0,212,168,.3)}50%{box-shadow:0 0 0 12px rgba(0,212,168,0)}}
+.auth-msg{font-size:11px;color:var(--muted);margin-bottom:32px;text-align:center;min-height:18px;letter-spacing:1px}
+.auth-msg.ok{color:var(--accent)}.auth-msg.err{color:var(--accent3)}
+.auth-divider{display:flex;align-items:center;gap:12px;width:100%;max-width:280px;margin-bottom:24px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-divider span{font-size:9px;color:var(--muted);letter-spacing:2px}
+/* PIN */
+.pin-display{display:flex;gap:10px;margin-bottom:20px}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .2s}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent)}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;width:100%}
+.pin-btn{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:16px;font-family:'DM Mono',monospace;font-size:18px;color:var(--text);
+  cursor:pointer;transition:all .15s;text-align:center}
+.pin-btn:active{background:rgba(0,212,168,.15);border-color:var(--accent);transform:scale(0.94)}
+.pin-btn.del{font-size:14px;color:var(--muted)}
+.auth-setup-msg{font-size:10px;color:var(--muted);text-align:center;max-width:280px;line-height:1.6;margin-bottom:20px}
+.btn-bio-setup{background:transparent;border:1px solid var(--accent);border-radius:9px;
+  padding:10px 20px;color:var(--accent);font-family:'DM Mono',monospace;
+  font-size:11px;cursor:pointer;letter-spacing:1px;margin-bottom:12px}
+.btn-pin-only{background:transparent;border:none;color:var(--muted);
+  font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;text-decoration:underline}
 </style>
 </head>
 <body>
 
+<!-- ══ AUTH SCREEN ══ -->
+<div id="authScreen">
+  <img class="auth-logo" src="./icon.png" alt="">
+  <div class="auth-title">inver<span>siones</span></div>
+  <div class="auth-sub">acceso seguro</div>
+  <div id="authSetup" style="display:none;flex-direction:column;align-items:center;width:100%;max-width:280px">
+    <div class="auth-setup-msg">Primera vez. Configurá tu acceso biométrico o un PIN de 4 dígitos.</div>
+    <button class="btn-bio-setup" onclick="setupBiometric()">🫵&nbsp; Configurar huella / Face ID</button>
+    <button class="btn-pin-only" onclick="showPinSetup()">Usar solo PIN</button>
+  </div>
+  <div id="authBio" style="display:none;flex-direction:column;align-items:center">
+    <div class="auth-finger" onclick="triggerBiometric()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="38" height="38">
+        <path d="M12 2a7 7 0 0 1 7 7c0 5-3.5 9.5-7 11-3.5-1.5-7-6-7-11a7 7 0 0 1 7-7z"/>
+        <path d="M12 6a3 3 0 0 1 3 3c0 3-1.5 5.5-3 7-1.5-1.5-3-4-3-7a3 3 0 0 1 3-3z"/>
+        <line x1="12" y1="10" x2="12" y2="13"/>
+      </svg>
+    </div>
+    <div class="auth-msg" id="bioMsg">Tocá para autenticar</div>
+    <div class="auth-divider"><span>o</span></div>
+    <div style="font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:1px;padding:8px" onclick="showPinLogin()">usar PIN</div>
+  </div>
+  <div id="authPinSetup" style="display:none;flex-direction:column;align-items:center;width:100%">
+    <div class="auth-msg" id="pinSetupMsg">Elegí un PIN de 4 dígitos</div>
+    <div class="pin-display" id="pinSetupDisplay">
+      <div class="pin-dot" id="sd0"></div><div class="pin-dot" id="sd1"></div>
+      <div class="pin-dot" id="sd2"></div><div class="pin-dot" id="sd3"></div>
+    </div>
+    <div class="pin-grid" id="pinSetupGrid"></div>
+  </div>
+  <div id="authPinLogin" style="display:none;flex-direction:column;align-items:center;width:100%">
+    <div class="auth-msg" id="pinLoginMsg">Ingresá tu PIN</div>
+    <div class="pin-display" id="pinLoginDisplay">
+      <div class="pin-dot" id="ld0"></div><div class="pin-dot" id="ld1"></div>
+      <div class="pin-dot" id="ld2"></div><div class="pin-dot" id="ld3"></div>
+    </div>
+    <div class="pin-grid" id="pinLoginGrid"></div>
+    <div style="margin-top:16px;font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:1px" id="backToBioBtn" onclick="showBioLogin()">← volver a huella</div>
+  </div>
+</div>
+<div id="appContent" style="display:none">
 <div class="topbar">
   <div class="topbar-left">
     <img src="./icon.png" alt="Inversiones">
@@ -683,7 +771,6 @@ function renderPatrimonio(){
     <div class="pat-row"><span><span class="pdot" style="background:${i.c}"></span>${i.l}</span><span>U$S ${(i.v||0).toLocaleString()}</span></div>`).join('');
 }
 
-// INIT
 function init(){
   renderHoldings(); renderPlan(); renderActivos();
   if(S.lastUpdate){
@@ -695,7 +782,213 @@ function init(){
   setTimeout(refreshAll,800);
   if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
-init();
+// ══ AUTH SYSTEM ══
+const AUTH_KEY = 'inv_auth';
+let pinBuffer = '';
+let pinConfirm = '';
+let authState = 'login'; // setup | login | pinsetup | pinlogin
+
+function getAuth(){ return JSON.parse(localStorage.getItem(AUTH_KEY)||'null'); }
+function setAuth(d){ localStorage.setItem(AUTH_KEY, JSON.stringify(d)); }
+
+function buildPinGrid(gridId, onDigit, onDel){
+  const g = document.getElementById(gridId);
+  g.innerHTML = '';
+  [1,2,3,4,5,6,7,8,9,'',0,'⌫'].forEach(k => {
+    const b = document.createElement('button');
+    b.className = 'pin-btn' + (k==='⌫'?' del':'');
+    b.textContent = k;
+    if(k !== '') b.onclick = () => k==='⌫' ? onDel() : onDigit(String(k));
+    else b.disabled = true, b.style.opacity='0';
+    g.appendChild(b);
+  });
+}
+
+function updatePinDots(prefix, len){
+  for(let i=0;i<4;i++){
+    const d = document.getElementById(prefix+i);
+    if(d) d.classList.toggle('filled', i < len);
+  }
+}
+
+// SETUP BIOMÉTRICO
+async function setupBiometric(){
+  if(!window.PublicKeyCredential){ showPinSetup(); return; }
+  try {
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if(!available){ showPinSetup(); return; }
+
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    const cred = await navigator.credentials.create({
+      publicKey:{
+        challenge,
+        rp:{ name:'Inversiones', id: location.hostname||'localhost' },
+        user:{ id: new TextEncoder().encode('nico'), name:'nico', displayName:'Nico' },
+        pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+        authenticatorSelection:{ authenticatorAttachment:'platform', userVerification:'required' },
+        timeout: 60000
+      }
+    });
+    const credId = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+    setAuth({ type:'bio', credId, pin:null });
+    unlockApp();
+  } catch(e){
+    // Si falla, ofrecer PIN
+    showPinSetup();
+  }
+}
+
+async function triggerBiometric(){
+  const auth = getAuth();
+  if(!auth || auth.type==='pin'){ showPinLogin(); return; }
+  const msg = document.getElementById('bioMsg');
+  msg.textContent = 'Verificando...';
+  msg.className = 'auth-msg';
+  try {
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    await navigator.credentials.get({
+      publicKey:{
+        challenge,
+        rpId: location.hostname||'localhost',
+        userVerification:'required',
+        timeout:60000
+      }
+    });
+    msg.textContent = '✓ Acceso concedido';
+    msg.className = 'auth-msg ok';
+    setTimeout(unlockApp, 400);
+  } catch(e){
+    msg.textContent = 'Autenticación fallida — intentá con PIN';
+    msg.className = 'auth-msg err';
+    setTimeout(showPinLogin, 1200);
+  }
+}
+
+// PIN SETUP
+function showPinSetup(){
+  hideAllAuth();
+  pinBuffer = ''; pinConfirm = '';
+  const el = document.getElementById('authPinSetup');
+  el.style.display = 'flex';
+  document.getElementById('pinSetupMsg').textContent = 'Elegí un PIN de 4 dígitos';
+  document.getElementById('pinSetupMsg').className = 'auth-msg';
+  updatePinDots('sd', 0);
+  buildPinGrid('pinSetupGrid',
+    d => {
+      if(pinBuffer.length < 4){
+        pinBuffer += d;
+        updatePinDots('sd', pinBuffer.length);
+        if(pinBuffer.length === 4){
+          if(pinConfirm === ''){
+            // Primera entrada — pedir confirmación
+            setTimeout(()=>{
+              pinConfirm = pinBuffer;
+              pinBuffer = '';
+              updatePinDots('sd', 0);
+              document.getElementById('pinSetupMsg').textContent = 'Confirmá el PIN';
+            }, 200);
+          } else {
+            // Segunda entrada — verificar
+            if(pinBuffer === pinConfirm){
+              setAuth({ type:'pin', pin: btoa(pinBuffer), credId:null });
+              document.getElementById('pinSetupMsg').textContent = '✓ PIN configurado';
+              document.getElementById('pinSetupMsg').className = 'auth-msg ok';
+              setTimeout(unlockApp, 600);
+            } else {
+              document.getElementById('pinSetupMsg').textContent = 'No coinciden, intentá de nuevo';
+              document.getElementById('pinSetupMsg').className = 'auth-msg err';
+              pinBuffer = ''; pinConfirm = '';
+              updatePinDots('sd', 0);
+            }
+          }
+        }
+      }
+    },
+    () => { if(pinBuffer.length > 0){ pinBuffer = pinBuffer.slice(0,-1); updatePinDots('sd', pinBuffer.length); } }
+  );
+}
+
+// PIN LOGIN
+function showPinLogin(){
+  hideAllAuth();
+  pinBuffer = '';
+  const el = document.getElementById('authPinLogin');
+  el.style.display = 'flex';
+  document.getElementById('pinLoginMsg').textContent = 'Ingresá tu PIN';
+  document.getElementById('pinLoginMsg').className = 'auth-msg';
+  // Mostrar botón volver a huella solo si tiene bio configurado
+  const auth = getAuth();
+  const backBtn = document.getElementById('backToBioBtn');
+  if(backBtn) backBtn.style.display = (auth?.type==='bio') ? 'block' : 'none';
+  updatePinDots('ld', 0);
+  buildPinGrid('pinLoginGrid',
+    d => {
+      if(pinBuffer.length < 4){
+        pinBuffer += d;
+        updatePinDots('ld', pinBuffer.length);
+        if(pinBuffer.length === 4){
+          const auth = getAuth();
+          const stored = auth?.pin ? atob(auth.pin) : null;
+          if(stored && pinBuffer === stored){
+            document.getElementById('pinLoginMsg').textContent = '✓ Bienvenido';
+            document.getElementById('pinLoginMsg').className = 'auth-msg ok';
+            setTimeout(unlockApp, 400);
+          } else {
+            document.getElementById('pinLoginMsg').textContent = 'PIN incorrecto';
+            document.getElementById('pinLoginMsg').className = 'auth-msg err';
+            pinBuffer = '';
+            updatePinDots('ld', 0);
+            setTimeout(()=>{
+              document.getElementById('pinLoginMsg').textContent = 'Ingresá tu PIN';
+              document.getElementById('pinLoginMsg').className = 'auth-msg';
+            }, 1000);
+          }
+        }
+      }
+    },
+    () => { if(pinBuffer.length > 0){ pinBuffer = pinBuffer.slice(0,-1); updatePinDots('ld', pinBuffer.length); } }
+  );
+}
+
+function showBioLogin(){
+  hideAllAuth();
+  document.getElementById('authBio').style.display = 'flex';
+  document.getElementById('bioMsg').textContent = 'Tocá para autenticar';
+  document.getElementById('bioMsg').className = 'auth-msg';
+  // Auto-trigger
+  setTimeout(triggerBiometric, 300);
+}
+
+function hideAllAuth(){
+  ['authSetup','authBio','authPinSetup','authPinLogin'].forEach(id=>{
+    document.getElementById(id).style.display='none';
+  });
+}
+
+function unlockApp(){
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('appContent').style.display = 'block';
+  init();
+}
+
+function initAuth(){
+  const auth = getAuth();
+  if(!auth){
+    // Primera vez — mostrar setup
+    hideAllAuth();
+    document.getElementById('authSetup').style.display = 'flex';
+  } else if(auth.type === 'bio'){
+    showBioLogin();
+  } else {
+    showPinLogin();
+  }
+}
+
+initAuth();
+
 </script>
+</div><!-- /appContent -->
 </body>
 </html>

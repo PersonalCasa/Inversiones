@@ -9,21 +9,22 @@
 <meta name="theme-color" content="#060e1a">
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./icon.png">
+<!-- iOS icon sin esquinas cortadas -->
+<link rel="apple-touch-icon-precomposed" href="./icon.png">
 <title>Inversiones</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,700;1,300&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#060e1a; --bg2:#0a1628; --surface:#0f1f35; --surface2:#162840;
-  --border:#1a3050; --accent:#00d4a8; --accent2:#3a7bd5;
-  --accent3:#ff6b6b; --gold:#f5c842; --text:#e8f0f8; --muted:#4a6080;
-  --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#060e1a;--bg2:#0a1628;--surface:#0f1f35;--surface2:#162840;
+  --border:#1a3050;--accent:#00d4a8;--accent2:#3a7bd5;
+  --accent3:#ff6b6b;--gold:#f5c842;--text:#e8f0f8;--muted:#4a6080;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   min-height:100dvh;overflow-x:hidden;
   padding-top:var(--safe-top);padding-bottom:calc(68px + var(--safe-bottom))}
 
-/* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(6,14,26,0.96);
   backdrop-filter:blur(12px);padding:12px 16px;border-bottom:1px solid var(--border);
   display:flex;justify-content:space-between;align-items:center}
@@ -37,12 +38,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   padding:5px 9px;color:var(--muted);cursor:pointer;font-size:13px;transition:all .2s}
 .refresh-btn:active{color:var(--accent);border-color:var(--accent)}
 
-/* PAGES */
 .page{display:none;padding:14px 14px 8px;animation:fu .25s ease}
 .page.active{display:block}
 @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-/* NAV */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;
   background:rgba(6,14,26,0.97);backdrop-filter:blur(16px);
   border-top:1px solid var(--border);display:flex;
@@ -54,11 +53,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 .nav-btn.active{color:var(--accent)}
 .nav-btn svg{width:20px;height:20px}
 
-/* CARDS */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
 .sec{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
 
-/* TOTAL */
 .total-card{background:linear-gradient(135deg,var(--surface),var(--surface2));
   border:1px solid var(--accent);border-radius:14px;padding:16px;margin-bottom:10px}
 .total-lbl{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
@@ -70,20 +67,15 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 .mv{font-size:12px}
 .green{color:var(--accent)}.red{color:var(--accent3)}.blue{color:var(--accent2)}
 
-/* ALERT */
 .alert-banner{display:none;background:rgba(255,107,107,.1);border:1px solid var(--accent3);
   border-radius:9px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--accent3);line-height:1.6}
 .alert-banner.show{display:block}
 
-/* HOLDING */
 .holding{background:var(--surface);border:1px solid var(--border);border-radius:11px;margin-bottom:7px;overflow:hidden;transition:border-color .2s}
 .holding.alrt{border-color:var(--accent3)}.holding.pos{border-color:rgba(0,212,168,.3)}
 .hm{display:flex;justify-content:space-between;align-items:center;padding:12px;cursor:pointer}
 .ht{font-size:14px;font-weight:500}.hn{font-size:8px;color:var(--muted);margin-top:2px}
 .hv{font-size:14px;text-align:right}.hc{font-size:10px;margin-top:2px}
-.hbar{height:2px;background:var(--accent);opacity:0;transition:opacity .3s}
-.holding.loading .hbar{opacity:1;animation:lb 1s infinite}
-@keyframes lb{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 .hdet{display:none;padding:0 12px 12px;border-top:1px solid var(--border)}
 .hdet.open{display:block}
 .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}
@@ -102,28 +94,55 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   cursor:pointer;letter-spacing:1px;transition:all .2s;margin-bottom:7px}
 .btn-add:hover{border-color:var(--accent);color:var(--accent)}
 
-/* ALLOC */
 .ar{margin-bottom:9px}
 .at{display:flex;justify-content:space-between;margin-bottom:4px}
 .atk{font-size:11px}.atp{font-size:11px;color:var(--muted)}
 .abg{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
 .af{height:100%;border-radius:2px;transition:width 1s ease}
 .as{display:flex;justify-content:space-between;margin-top:2px;font-size:8px;color:var(--muted)}
-.chip{display:inline-block;font-size:7px;padding:1px 5px;border-radius:8px;
-  text-transform:uppercase;letter-spacing:1px;margin-left:5px}
+.chip{display:inline-block;font-size:7px;padding:1px 5px;border-radius:8px;text-transform:uppercase;letter-spacing:1px;margin-left:5px}
 .cl{background:rgba(0,212,168,.1);color:var(--accent)}
 .cm{background:rgba(245,200,66,.1);color:var(--gold)}
 .ch{background:rgba(255,107,107,.1);color:var(--accent3)}
 
-/* PLAN */
-.pr{display:flex;justify-content:space-between;align-items:center;
-  padding:9px 0;border-bottom:1px solid var(--border)}
+.pr{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
 .pr:last-child{border-bottom:none}
 .pr.done{opacity:.35;text-decoration:line-through}
 .pr.cur{background:rgba(0,212,168,.05);border-radius:7px;padding:9px 7px;margin:0 -7px}
 .pm{font-size:9px;color:var(--muted);width:75px}
 .pt{font-size:11px}.pt.ci{color:var(--accent)}
 .pa{font-size:10px;color:var(--accent)}
+
+/* MERCADO */
+.mkt-tabs{display:flex;gap:6px;margin-bottom:12px}
+.mtab{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:7px;text-align:center;font-size:9px;letter-spacing:1px;cursor:pointer;
+  color:var(--muted);transition:all .2s;text-transform:uppercase;border:none}
+.mtab.active{background:rgba(0,212,168,.1);border:1px solid var(--accent);color:var(--accent)}
+.mkt-row{display:flex;justify-content:space-between;align-items:center;
+  padding:11px 12px;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;margin-bottom:6px;transition:border-color .2s}
+.mkt-row:active{border-color:var(--accent)}
+.mkt-left{display:flex;align-items:center;gap:10px}
+.mkt-ticker{font-size:13px;font-weight:500;width:65px}
+.mkt-name{font-size:9px;color:var(--muted);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mkt-right{text-align:right;display:flex;align-items:center;gap:10px}
+.mkt-price{font-size:13px}
+.mkt-chg{font-size:11px;margin-top:2px;font-weight:500}
+.mkt-chg.up{color:var(--accent)}.mkt-chg.dn{color:var(--accent3)}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:5px;font-size:10px}
+.badge.up{background:rgba(0,212,168,.12)}.badge.dn{background:rgba(255,107,107,.12)}
+.seguir-btn{font-size:12px;border:none;background:transparent;cursor:pointer;padding:4px;color:var(--muted);transition:color .2s}
+.seguir-btn.on{color:var(--gold)}
+.search-bar{display:flex;gap:6px;margin-bottom:12px}
+.search-inp{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none}
+.search-inp:focus{border-color:var(--accent)}
+.search-btn{background:var(--accent);border:none;border-radius:8px;padding:9px 14px;
+  color:#060e1a;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;font-weight:500}
+.loading-mkt{text-align:center;color:var(--muted);font-size:10px;padding:30px;letter-spacing:2px}
+.error-mkt{text-align:center;color:var(--accent3);font-size:10px;padding:20px;line-height:1.6}
+.mkt-cat{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin:12px 0 6px}
 
 /* ACTIVOS */
 .ac{background:var(--surface);border:1px solid var(--border);border-radius:11px;margin-bottom:7px}
@@ -139,42 +158,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 .btn-am{width:100%;border:1px dashed var(--border);background:transparent;border-radius:7px;
   padding:7px;color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;margin-top:6px;letter-spacing:1px}
 
-/* MERCADO */
-.mkt-tabs{display:flex;gap:6px;margin-bottom:12px}
-.mtab{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;
-  padding:7px;text-align:center;font-size:9px;letter-spacing:1px;cursor:pointer;
-  color:var(--muted);transition:all .2s;text-transform:uppercase}
-.mtab.active{background:rgba(0,212,168,.1);border-color:var(--accent);color:var(--accent)}
-.mkt-row{display:flex;justify-content:space-between;align-items:center;
-  padding:11px 12px;background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;margin-bottom:6px}
-.mkt-left{display:flex;align-items:center;gap:10px}
-.mkt-ticker{font-size:13px;font-weight:500;width:60px}
-.mkt-name{font-size:9px;color:var(--muted)}
-.mkt-right{text-align:right}
-.mkt-price{font-size:13px}
-.mkt-chg{font-size:11px;margin-top:2px;font-weight:500}
-.mkt-chg.up{color:var(--accent)}.mkt-chg.dn{color:var(--accent3)}
-.mkt-badge{display:inline-block;font-size:8px;padding:1px 5px;border-radius:4px;margin-right:6px}
-.mkt-badge.up{background:rgba(0,212,168,.12);color:var(--accent)}
-.mkt-badge.dn{background:rgba(255,107,107,.12);color:var(--accent3)}
-.search-bar{display:flex;gap:6px;margin-bottom:12px}
-.search-inp{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;
-  padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none}
-.search-inp:focus{border-color:var(--accent)}
-.search-btn{background:var(--accent);border:none;border-radius:8px;padding:9px 14px;
-  color:#060e1a;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;font-weight:500}
-.seguir-btn{font-size:9px;border:1px solid var(--border);background:transparent;
-  border-radius:5px;padding:3px 7px;color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace}
-.seguir-btn.siguiendo{border-color:var(--accent);color:var(--accent)}
-.loading-mkt{text-align:center;color:var(--muted);font-size:10px;padding:20px;letter-spacing:2px}
-
 /* PATRIMONIO */
 .pat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px}
 .pat-row:last-child{border-bottom:none}
 .pdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
 
-/* SPINNER */
 .spinner{display:inline-block;width:11px;height:11px;border:2px solid var(--border);
   border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-left:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -196,7 +184,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   </div>
 </div>
 
-<!-- ══ PORTFOLIO ══ -->
+<!-- PORTFOLIO -->
 <div class="page active" id="page-portfolio">
   <div class="alert-banner" id="alertBanner"></div>
   <div class="total-card">
@@ -217,28 +205,28 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   <div class="card" id="planCard"></div>
 </div>
 
-<!-- ══ MERCADO ══ -->
+<!-- MERCADO -->
 <div class="page" id="page-mercado">
   <div class="search-bar">
-    <input class="search-inp" id="searchInp" placeholder="Buscar ticker (SPY, BTC-USD...)" onkeydown="if(event.key==='Enter')searchTicker()">
-    <button class="search-btn" onclick="searchTicker()">buscar</button>
+    <input class="search-inp" id="searchInp" placeholder="Buscar ticker: SPY, BTC, NVDA..." onkeydown="if(event.key==='Enter')searchTicker()">
+    <button class="search-btn" onclick="searchTicker()">IR</button>
   </div>
   <div class="mkt-tabs">
-    <div class="mtab active" onclick="showMktTab('gainers',this)">▲ Subieron</div>
-    <div class="mtab" onclick="showMktTab('losers',this)">▼ Bajaron</div>
-    <div class="mtab" onclick="showMktTab('seguidos',this)">★ Seguidos</div>
+    <button class="mtab active" onclick="showMktTab('gainers',this)">▲ Subieron</button>
+    <button class="mtab" onclick="showMktTab('losers',this)">▼ Bajaron</button>
+    <button class="mtab" onclick="showMktTab('seguidos',this)">★ Seguidos</button>
   </div>
   <div id="mktContent"></div>
 </div>
 
-<!-- ══ ACTIVOS ══ -->
+<!-- ACTIVOS -->
 <div class="page" id="page-activos">
   <div class="sec" style="margin-top:4px">Otros activos</div>
   <div id="activosList"></div>
   <button class="btn-add" onclick="addActivo()">+ agregar activo</button>
 </div>
 
-<!-- ══ PATRIMONIO ══ -->
+<!-- PATRIMONIO -->
 <div class="page" id="page-patrimonio">
   <div class="sec" style="margin-top:4px">Patrimonio total</div>
   <div class="total-card">
@@ -248,7 +236,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   <div class="card" id="patDetalle"></div>
 </div>
 
-<!-- NAV -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="goTo('portfolio',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -263,100 +250,143 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     Activos
   </button>
   <button class="nav-btn" onclick="goTo('patrimonio',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     Patrimonio
   </button>
 </nav>
 
 <script>
-// ══ STATE ══
-const KEY = 'inv_v3';
-function def() {
+const FKEY = 'd883d6hr01qmhaki1gsgd883d6hr01qmhaki1gt0';
+const KEY = 'inv_v4';
+
+// Mapeo tickers Finnhub: cryptos usan formato BINANCE:BTCUSDT
+const TICKER_MAP = {
+  'BTC-USD': 'BINANCE:BTCUSDT',
+  'ETH-USD': 'BINANCE:ETHUSDT',
+  'SOL-USD': 'BINANCE:SOLUSDT',
+  'BNB-USD': 'BINANCE:BNBUSDT',
+};
+function toFinnhub(t){ return TICKER_MAP[t] || t; }
+function fromFinnhub(t){ return Object.entries(TICKER_MAP).find(([k,v])=>v===t)?.[0] || t; }
+
+function def(){
   return {
-    holdings: [{ id:1, ticker:'URTH', name:'iShares MSCI World ETF', units:1.000142, buyPrice:199.60, currentPrice:201.85, dayChange:1.12 }],
-    activos: [],
-    seguidos: ['NVDA','TSLA','AAPL','AMZN','GOOG','META','MSFT','QQQ','SPY'],
-    mktCache: {},
-    lastUpdate: null
+    holdings:[{id:1,ticker:'URTH',name:'iShares MSCI World ETF',units:1.000142,buyPrice:199.60,currentPrice:201.85,dayChange:1.12,prevClose:199.60}],
+    activos:[],
+    seguidos:['NVDA','TSLA','AAPL','SPY','QQQ','MSFT','AMZN','GOOG','BTC-USD','ETH-USD'],
+    cache:{},
+    lastUpdate:null
   };
 }
 let S = JSON.parse(localStorage.getItem(KEY)||'null') || def();
-function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+function save(){ localStorage.setItem(KEY,JSON.stringify(S)); }
 
-// ══ NAV ══
-let currentPage = 'portfolio';
-function goTo(page, btn) {
+// NAV
+let curPage = 'portfolio';
+function goTo(page,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  btn.classList.add('active');
-  currentPage = page;
-  if (page==='mercado') renderMkt('gainers');
-  if (page==='patrimonio') renderPatrimonio();
+  btn.classList.add('active'); curPage=page;
+  if(page==='mercado') renderMkt('gainers');
+  if(page==='patrimonio') renderPatrimonio();
 }
 
-// ══ FETCH PRICE ══
-async function fetchPrice(ticker) {
+// FINNHUB FETCH
+async function fetchFinnhub(ticker){
+  const sym = toFinnhub(ticker);
   try {
-    const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`, { signal: AbortSignal.timeout(7000) });
+    const url = `https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FKEY}`;
+    const r = await fetch(url, {signal:AbortSignal.timeout(8000)});
     const d = await r.json();
-    const meta = d?.chart?.result?.[0]?.meta;
-    if (!meta) return null;
-    const price = meta.regularMarketPrice || meta.previousClose;
-    const prev = meta.chartPreviousClose || meta.previousClose;
-    const dayChange = prev ? ((price-prev)/prev*100) : 0;
-    return { price, dayChange, name: meta.longName || meta.shortName || ticker };
-  } catch(e) { return null; }
+    // d.c = current, d.pc = prev close, d.dp = % change, d.d = change
+    if(!d || d.c === 0 || d.c === undefined) return null;
+    return {
+      price: d.c,
+      prevClose: d.pc,
+      dayChange: d.dp || 0,
+      dayDiff: d.d || 0
+    };
+  } catch(e){ return null; }
 }
 
-// ══ REFRESH ALL ══
-async function refreshAll() {
-  document.querySelector('.refresh-btn').innerHTML = '<span class="spinner"></span>';
+async function fetchFinnhubProfile(ticker){
+  try {
+    const url = `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${FKEY}`;
+    const r = await fetch(url, {signal:AbortSignal.timeout(6000)});
+    const d = await r.json();
+    return d?.name || ticker;
+  } catch(e){ return ticker; }
+}
+
+// REFRESH ALL
+async function refreshAll(){
+  const btn = document.querySelector('.refresh-btn');
+  btn.innerHTML = '<span class="spinner"></span>';
   document.getElementById('pStat').textContent = 'actualizando...';
   let alerts = [];
-  for (let h of S.holdings) {
-    const d = await fetchPrice(h.ticker);
-    if (d) { h.currentPrice = d.price; h.dayChange = d.dayChange; }
-    if (h.dayChange <= -3) alerts.push(`⚠️ ${h.ticker} cayó ${h.dayChange.toFixed(2)}% hoy`);
+
+  for(let h of S.holdings){
+    const d = await fetchFinnhub(h.ticker);
+    if(d){
+      h.currentPrice = d.price;
+      h.prevClose = d.prevClose;
+      h.dayChange = d.dayChange;
+    }
+    if((h.dayChange||0) <= -3) alerts.push(`⚠️ ${h.ticker} cayó ${h.dayChange.toFixed(2)}% hoy`);
   }
-  // Also refresh seguidos cache
-  for (let t of S.seguidos) {
-    const d = await fetchPrice(t);
-    if (d) S.mktCache[t] = { price: d.price, dayChange: d.dayChange, name: d.name, ts: Date.now() };
+
+  // Refresh seguidos cache
+  for(let t of S.seguidos){
+    const d = await fetchFinnhub(t);
+    if(d) S.cache[t] = {...d, ts:Date.now()};
   }
+
   S.lastUpdate = new Date().toISOString();
   save();
+
   const now = new Date();
-  document.getElementById('lastUpd').innerHTML = now.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})+'<br>'+now.toLocaleDateString('es-UY',{day:'2-digit',month:'short'});
+  document.getElementById('lastUpd').innerHTML =
+    now.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})+'<br>'+
+    now.toLocaleDateString('es-UY',{day:'2-digit',month:'short'});
+
   document.getElementById('pStat').textContent = 'precios actualizados';
-  document.querySelector('.refresh-btn').innerHTML = '⟳';
+  btn.innerHTML = '⟳';
+
   const ab = document.getElementById('alertBanner');
-  if (alerts.length) { ab.innerHTML = alerts.join('<br>'); ab.classList.add('show'); }
+  if(alerts.length){ ab.innerHTML=alerts.join('<br>'); ab.classList.add('show'); }
   else ab.classList.remove('show');
+
   renderHoldings();
-  if (currentPage==='mercado') renderMkt(document.querySelector('.mtab.active')?.textContent.includes('Subi') ? 'gainers' : document.querySelector('.mtab.active')?.textContent.includes('Baj') ? 'losers' : 'seguidos');
+  if(curPage==='mercado'){
+    const activeTab = document.querySelector('.mtab.active');
+    const tab = activeTab?.textContent.includes('Sub')?'gainers':activeTab?.textContent.includes('Baj')?'losers':'seguidos';
+    renderMkt(tab);
+  }
 }
 
-// ══ HOLDINGS ══
-function renderHoldings() {
+// HOLDINGS
+function renderHoldings(){
   const list = document.getElementById('holdingsList');
-  list.innerHTML = '';
-  let tVal=0, tInv=0, tDay=0;
-  S.holdings.forEach(h => {
-    const val = h.units*h.currentPrice, inv = h.units*h.buyPrice;
-    const gain = val-inv, gainPct = inv>0?(gain/inv*100):0;
-    const dayGain = val*(h.dayChange||0)/100;
+  list.innerHTML='';
+  let tVal=0,tInv=0,tDay=0;
+
+  S.holdings.forEach(h=>{
+    const val=h.units*h.currentPrice, inv=h.units*h.buyPrice;
+    const gain=val-inv, gainPct=inv>0?(gain/inv*100):0;
+    const dayGain=h.units*(h.currentPrice-(h.prevClose||h.buyPrice));
     tVal+=val; tInv+=inv; tDay+=dayGain;
-    const gc = gain>=0?'green':'red', dc = (h.dayChange||0)>=0?'green':'red';
-    const ac = (h.dayChange||0)<=-3?'alrt':(h.dayChange||0)>0?'pos':'';
-    const el = document.createElement('div');
-    el.className = `holding ${ac}`;
-    el.innerHTML = `
-      <div class="hbar"></div>
+    const gc=gain>=0?'green':'red', dc=(h.dayChange||0)>=0?'green':'red';
+    const ac=(h.dayChange||0)<=-3?'alrt':(h.dayChange||0)>0?'pos':'';
+    const el=document.createElement('div');
+    el.className=`holding ${ac}`;
+    el.innerHTML=`
       <div class="hm" onclick="togH(${h.id})">
         <div><div class="ht">${h.ticker}</div><div class="hn">${h.name||''} · ${h.units.toFixed(4)} u.</div></div>
-        <div><div class="hv">U$S ${val.toFixed(2)}</div>
-        <div class="hc ${dc}">${(h.dayChange||0)>=0?'+':''}${(h.dayChange||0).toFixed(2)}% hoy &nbsp;<span class="${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}%</span></div></div>
+        <div>
+          <div class="hv">U$S ${val.toFixed(2)}</div>
+          <div class="hc ${dc}">${(h.dayChange||0)>=0?'+':''}${(h.dayChange||0).toFixed(2)}% hoy &nbsp;<span class="${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}% total</span></div>
+        </div>
       </div>
       <div class="hdet" id="hd-${h.id}">
         <div class="dgrid">
@@ -372,16 +402,16 @@ function renderHoldings() {
       </div>`;
     list.appendChild(el);
   });
-  // Totals
-  const tGain = tVal-tInv, tGainPct = tInv>0?(tGain/tInv*100):0;
-  document.getElementById('tVal').textContent = tVal.toFixed(2);
-  document.getElementById('tInv').textContent = 'U$S '+tInv.toFixed(0);
-  const ge = document.getElementById('tGain');
-  ge.textContent = (tGain>=0?'+':'')+'U$S '+tGain.toFixed(2)+' ('+(tGainPct>=0?'+':'')+tGainPct.toFixed(2)+'%)';
-  ge.className = 'mv '+(tGain>=0?'green':'red');
-  const de = document.getElementById('tDay');
-  de.textContent = (tDay>=0?'+':'')+'U$S '+tDay.toFixed(2);
-  de.className = 'mv '+(tDay>=0?'green':'red');
+
+  const tGain=tVal-tInv, tGainPct=tInv>0?(tGain/tInv*100):0;
+  document.getElementById('tVal').textContent=tVal.toFixed(2);
+  document.getElementById('tInv').textContent='U$S '+tInv.toFixed(0);
+  const ge=document.getElementById('tGain');
+  ge.textContent=(tGain>=0?'+':'')+'U$S '+tGain.toFixed(2)+' ('+(tGainPct>=0?'+':'')+tGainPct.toFixed(2)+'%)';
+  ge.className='mv '+(tGain>=0?'green':'red');
+  const de=document.getElementById('tDay');
+  de.textContent=(tDay>=0?'+':'')+'U$S '+tDay.toFixed(2);
+  de.className='mv '+(tDay>=0?'green':'red');
   renderAlloc(tVal);
 }
 
@@ -398,41 +428,41 @@ function delH(id){
   S.holdings=S.holdings.filter(x=>x.id!==id); save(); renderHoldings();
 }
 function addPosition(){
-  const t=prompt('Ticker:'); if(!t) return;
-  const bp=parseFloat(prompt('Precio compra U$S:')); if(isNaN(bp)) return;
-  const u=parseFloat(prompt('Unidades:')); if(isNaN(u)) return;
+  const t=prompt('Ticker (ej: SPY, NVDA, BTC-USD):'); if(!t) return;
+  const bp=parseFloat(prompt('Precio de compra U$S:')); if(isNaN(bp)) return;
+  const u=parseFloat(prompt('Unidades (ej: 1.25 o 0.5):')); if(isNaN(u)) return;
   const n=prompt('Nombre (opcional):')||'';
-  S.holdings.push({id:Date.now(),ticker:t.toUpperCase(),name:n,units:u,buyPrice:bp,currentPrice:bp,dayChange:0});
+  S.holdings.push({id:Date.now(),ticker:t.toUpperCase(),name:n,units:u,buyPrice:bp,currentPrice:bp,dayChange:0,prevClose:bp});
   save(); renderHoldings(); refreshAll();
 }
 
-// ══ ALLOC ══
+// ALLOC
 function renderAlloc(tVal){
-  const targets = [
-    {k:'SPY',pct:.40,color:'var(--accent)',risk:'cl'},
-    {k:'URTH',pct:.25,color:'var(--accent2)',risk:'cl'},
-    {k:'QQQ',pct:.20,color:'var(--gold)',risk:'cm'},
-    {k:'GLD',pct:.10,color:'#ff9a3c',risk:'cl'},
-    {k:'Agresivo',pct:.05,color:'var(--accent3)',risk:'ch'},
+  const targets=[
+    {k:'SPY',pct:.40,color:'var(--accent)',risk:'cl',rl:'bajo'},
+    {k:'URTH',pct:.25,color:'var(--accent2)',risk:'cl',rl:'bajo'},
+    {k:'QQQ',pct:.20,color:'var(--gold)',risk:'cm',rl:'medio'},
+    {k:'GLD',pct:.10,color:'#ff9a3c',risk:'cl',rl:'muy bajo'},
+    {k:'Agresivo',pct:.05,color:'var(--accent3)',risk:'ch',rl:'alto'},
   ];
-  const agg = ['NVDA','TSLA','AMZN','GOOG','META'];
-  document.getElementById('allocCard').innerHTML = targets.map(t => {
-    const obj = tVal*t.pct;
-    let actual = 0;
+  const agg=['NVDA','TSLA','AMZN','GOOG','META'];
+  document.getElementById('allocCard').innerHTML=targets.map(t=>{
+    const obj=tVal*t.pct;
+    let actual=0;
     if(t.k==='Agresivo') S.holdings.filter(h=>agg.includes(h.ticker)).forEach(h=>actual+=h.units*h.currentPrice);
     else { const h=S.holdings.find(h=>h.ticker===t.k); if(h) actual=h.units*h.currentPrice; }
-    const fp = obj>0?Math.min((actual/obj)*100,100):0;
+    const fp=obj>0?Math.min((actual/obj)*100,100):0;
     return `<div class="ar">
-      <div class="at"><span class="atk">${t.k} <span class="chip ${t.risk}">${t.risk==='cl'?'bajo':t.risk==='cm'?'medio':'alto'}</span></span><span class="atp">${(t.pct*100).toFixed(0)}%</span></div>
+      <div class="at"><span class="atk">${t.k} <span class="chip ${t.risk}">${t.rl}</span></span><span class="atp">${(t.pct*100).toFixed(0)}%</span></div>
       <div class="abg"><div class="af" style="width:${fp}%;background:${t.color}"></div></div>
       <div class="as"><span>obj U$S ${obj.toFixed(0)}</span><span>actual U$S ${actual.toFixed(0)}</span></div>
     </div>`;
   }).join('');
 }
 
-// ══ PLAN ══
+// PLAN
 function renderPlan(){
-  const plan = [
+  const plan=[
     {m:'May 2026',t:'URTH',a:'U$S 199',done:true,cur:false},
     {m:'Jun 2026',t:'SPY',a:'U$S 250',done:false,cur:true},
     {m:'Jul 2026',t:'SPY',a:'U$S 250',done:false,cur:false},
@@ -442,7 +472,7 @@ function renderPlan(){
     {m:'Nov 2026',t:'SPY',a:'U$S 250',done:false,cur:false},
     {m:'Dic 2026',t:'NVDA / agresivo',a:'U$S 250',done:false,cur:false},
   ];
-  document.getElementById('planCard').innerHTML = plan.map(p=>`
+  document.getElementById('planCard').innerHTML=plan.map(p=>`
     <div class="pr ${p.done?'done':''} ${p.cur?'cur':''}">
       <span class="pm">${p.m}</span>
       <span class="pt ${p.cur?'ci':''}">${p.done?'✓ ':p.cur?'→ ':''}${p.t}</span>
@@ -450,125 +480,150 @@ function renderPlan(){
     </div>`).join('');
 }
 
-// ══ MERCADO ══
-const MKT_TICKERS = {
-  etf:   ['SPY','QQQ','IWM','URTH','EEM','GLD','IDRV'],
-  tech:  ['NVDA','AAPL','MSFT','GOOG','META','AMZN','TSLA','AMD','ORCL'],
-  otros: ['JPM','GS','XOM','NVO','NOVO-B.CO'],
-  crypto:['BTC-USD','ETH-USD','SOL-USD','BNB-USD']
-};
-const ALL_TICKERS = [...new Set([...MKT_TICKERS.etf,...MKT_TICKERS.tech,...MKT_TICKERS.otros,...MKT_TICKERS.crypto,...S.seguidos])];
+// MERCADO
+const MKT_LIST = [
+  {t:'SPY',   n:'S&P 500 ETF',         cat:'etf'},
+  {t:'QQQ',   n:'Nasdaq 100 ETF',       cat:'etf'},
+  {t:'URTH',  n:'MSCI World ETF',       cat:'etf'},
+  {t:'IWM',   n:'Russell 2000 ETF',     cat:'etf'},
+  {t:'GLD',   n:'Gold ETF',             cat:'etf'},
+  {t:'NVDA',  n:'NVIDIA',               cat:'tech'},
+  {t:'AAPL',  n:'Apple',                cat:'tech'},
+  {t:'MSFT',  n:'Microsoft',            cat:'tech'},
+  {t:'AMZN',  n:'Amazon',               cat:'tech'},
+  {t:'GOOG',  n:'Alphabet',             cat:'tech'},
+  {t:'META',  n:'Meta',                 cat:'tech'},
+  {t:'TSLA',  n:'Tesla',                cat:'tech'},
+  {t:'AMD',   n:'AMD',                  cat:'tech'},
+  {t:'BTC-USD',n:'Bitcoin',             cat:'crypto'},
+  {t:'ETH-USD',n:'Ethereum',            cat:'crypto'},
+  {t:'SOL-USD',n:'Solana',              cat:'crypto'},
+  {t:'NU',    n:'Nu Holdings',          cat:'otros'},
+  {t:'JPM',   n:'JPMorgan Chase',       cat:'otros'},
+];
 
 let mktTab = 'gainers';
-function showMktTab(tab, el){
+
+function showMktTab(tab,el){
   document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active'); mktTab = tab; renderMkt(tab);
+  el.classList.add('active'); mktTab=tab; renderMkt(tab);
 }
 
 async function renderMkt(tab){
   const cont = document.getElementById('mktContent');
-  cont.innerHTML = '<div class="loading-mkt"><span class="spinner"></span>&nbsp; cargando precios...</div>';
+  cont.innerHTML='<div class="loading-mkt"><span class="spinner"></span>&nbsp;&nbsp;cargando precios...</div>';
 
   if(tab==='seguidos'){
     const tickers = S.seguidos.length ? S.seguidos : ['NVDA','SPY','QQQ'];
-    const rows = await Promise.all(tickers.map(async t => {
-      const cached = S.mktCache[t];
-      const d = (cached && Date.now()-cached.ts < 300000) ? cached : await fetchPrice(t);
-      if(d && !cached) { S.mktCache[t]={...d,ts:Date.now()}; save(); }
-      return d ? {ticker:t,...d} : null;
+    const rows = await Promise.all(tickers.map(async t=>{
+      const cached = S.cache[t];
+      let d = (cached && Date.now()-cached.ts < 300000) ? cached : await fetchFinnhub(t);
+      if(d && (!cached || Date.now()-cached.ts >= 300000)){ S.cache[t]={...d,ts:Date.now()}; save(); }
+      const info = MKT_LIST.find(x=>x.t===t);
+      return d ? {ticker:t, name:info?.n||t, ...d} : null;
     }));
-    renderMktRows(rows.filter(Boolean), tab);
+    buildMktRows(rows.filter(Boolean), cont, true);
     return;
   }
 
-  // Para gainers/losers: usar caché o fetchear todos
-  const toFetch = ALL_TICKERS.filter(t => {
-    const c = S.mktCache[t];
-    return !c || Date.now()-c.ts > 300000;
+  // Fetch todos
+  const toFetch = MKT_LIST.filter(x=>{
+    const c=S.cache[x.t]; return !c||Date.now()-c.ts>300000;
   });
-  for(let t of toFetch.slice(0,20)){
-    const d = await fetchPrice(t);
-    if(d) { S.mktCache[t]={...d,ts:Date.now()}; }
+  for(let x of toFetch){
+    const d=await fetchFinnhub(x.t);
+    if(d){ S.cache[x.t]={...d,ts:Date.now(),name:x.n}; }
   }
   save();
 
-  let rows = ALL_TICKERS.map(t => {
-    const c = S.mktCache[t];
-    return c ? {ticker:t,...c} : null;
+  let rows = MKT_LIST.map(x=>{
+    const c=S.cache[x.t];
+    return c ? {ticker:x.t, name:x.n, ...c} : null;
   }).filter(Boolean);
 
-  rows.sort((a,b) => tab==='gainers' ? b.dayChange-a.dayChange : a.dayChange-b.dayChange);
-  renderMktRows(rows.slice(0,15), tab);
+  rows.sort((a,b)=>tab==='gainers'?b.dayChange-a.dayChange:a.dayChange-b.dayChange);
+  buildMktRows(rows.slice(0,12), cont, false);
 }
 
-function renderMktRows(rows, tab){
-  const cont = document.getElementById('mktContent');
-  if(!rows.length){ cont.innerHTML='<div class="loading-mkt">Sin datos disponibles</div>'; return; }
-  cont.innerHTML = rows.map(r => {
-    const up = r.dayChange >= 0;
-    const siguiendo = S.seguidos.includes(r.ticker);
+function buildMktRows(rows, cont, showEmpty){
+  if(!rows.length){
+    cont.innerHTML=`<div class="error-mkt">Sin datos disponibles.<br><small>Verificá tu conexión o intentá más tarde.</small></div>`;
+    return;
+  }
+  cont.innerHTML = rows.map(r=>{
+    const up=r.dayChange>=0;
+    const sig=S.seguidos.includes(r.ticker);
     return `<div class="mkt-row">
       <div class="mkt-left">
-        <span class="mkt-badge ${up?'up':'dn'}">${up?'▲':'▼'}</span>
-        <div><div class="mkt-ticker">${r.ticker}</div><div class="mkt-name">${(r.name||'').substring(0,22)}</div></div>
+        <div class="badge ${up?'up':'dn'}">${up?'▲':'▼'}</div>
+        <div>
+          <div class="mkt-ticker">${r.ticker}</div>
+          <div class="mkt-name">${r.name||''}</div>
+        </div>
       </div>
-      <div class="mkt-right" style="display:flex;align-items:center;gap:10px">
+      <div class="mkt-right">
         <div>
           <div class="mkt-price">U$S ${r.price?.toFixed(2)||'—'}</div>
           <div class="mkt-chg ${up?'up':'dn'}">${up?'+':''}${r.dayChange?.toFixed(2)||'0.00'}%</div>
         </div>
-        <button class="seguir-btn ${siguiendo?'siguiendo':''}" onclick="toggleSeguir('${r.ticker}',this)">${siguiendo?'★':'☆'}</button>
+        <button class="seguir-btn ${sig?'on':''}" onclick="toggleSeguir('${r.ticker}',this)" title="${sig?'Dejar de seguir':'Seguir'}">${sig?'★':'☆'}</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function toggleSeguir(ticker, btn){
+async function searchTicker(){
+  const raw=document.getElementById('searchInp').value.trim().toUpperCase();
+  if(!raw) return;
+  const cont=document.getElementById('mktContent');
+  cont.innerHTML=`<div class="loading-mkt"><span class="spinner"></span>&nbsp;&nbsp;buscando ${raw}...</div>`;
+  const d=await fetchFinnhub(raw);
+  if(!d){
+    cont.innerHTML=`<div class="error-mkt">No se encontró "${raw}".<br><small>Verificá el ticker exacto. Criptos: BTC-USD, ETH-USD</small></div>`;
+    return;
+  }
+  S.cache[raw]={...d,ts:Date.now()}; save();
+  const up=d.dayChange>=0, sig=S.seguidos.includes(raw);
+  const info=MKT_LIST.find(x=>x.t===raw);
+  cont.innerHTML=`<div class="mkt-row" style="border-color:${up?'var(--accent)':'var(--accent3)'}">
+    <div class="mkt-left">
+      <div class="badge ${up?'up':'dn'}">${up?'▲':'▼'}</div>
+      <div>
+        <div class="mkt-ticker">${raw}</div>
+        <div class="mkt-name">${info?.n||'—'}</div>
+      </div>
+    </div>
+    <div class="mkt-right">
+      <div>
+        <div class="mkt-price">U$S ${d.price?.toFixed(2)||'—'}</div>
+        <div class="mkt-chg ${up?'up':'dn'}">${up?'+':''}${d.dayChange?.toFixed(2)||'0.00'}%</div>
+      </div>
+      <button class="seguir-btn ${sig?'on':''}" onclick="toggleSeguir('${raw}',this)">${sig?'★':'☆'}</button>
+    </div>
+  </div>`;
+}
+
+function toggleSeguir(ticker,btn){
   if(S.seguidos.includes(ticker)){
-    S.seguidos = S.seguidos.filter(t=>t!==ticker);
-    btn.textContent='☆'; btn.classList.remove('siguiendo');
+    S.seguidos=S.seguidos.filter(t=>t!==ticker);
+    btn.textContent='☆'; btn.classList.remove('on');
   } else {
     S.seguidos.push(ticker);
-    btn.textContent='★'; btn.classList.add('siguiendo');
+    btn.textContent='★'; btn.classList.add('on');
   }
   save();
 }
 
-async function searchTicker(){
-  const t = document.getElementById('searchInp').value.trim().toUpperCase();
-  if(!t) return;
-  document.getElementById('mktContent').innerHTML = '<div class="loading-mkt"><span class="spinner"></span>&nbsp; buscando '+t+'...</div>';
-  const d = await fetchPrice(t);
-  if(!d){ document.getElementById('mktContent').innerHTML = '<div class="loading-mkt">No se encontró '+t+'</div>'; return; }
-  S.mktCache[t] = {...d, ts:Date.now()}; save();
-  const up = d.dayChange>=0;
-  const sig = S.seguidos.includes(t);
-  document.getElementById('mktContent').innerHTML = `
-    <div class="mkt-row" style="border-color:${up?'var(--accent)':'var(--accent3)'}">
-      <div class="mkt-left">
-        <span class="mkt-badge ${up?'up':'dn'}">${up?'▲':'▼'}</span>
-        <div><div class="mkt-ticker">${t}</div><div class="mkt-name">${(d.name||'').substring(0,24)}</div></div>
-      </div>
-      <div class="mkt-right" style="display:flex;align-items:center;gap:10px">
-        <div>
-          <div class="mkt-price">U$S ${d.price?.toFixed(2)||'—'}</div>
-          <div class="mkt-chg ${up?'up':'dn'}">${up?'+':''}${d.dayChange?.toFixed(2)||'0.00'}%</div>
-        </div>
-        <button class="seguir-btn ${sig?'siguiendo':''}" onclick="toggleSeguir('${t}',this)">${sig?'★':'☆'}</button>
-      </div>
-    </div>`;
-}
-
-// ══ ACTIVOS ══
+// ACTIVOS
 function renderActivos(){
-  const list = document.getElementById('activosList');
+  const list=document.getElementById('activosList');
   list.innerHTML='';
   if(!S.activos.length){
     list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:10px;padding:24px 0">Sin activos.<br>Agregá inmuebles, vehículos, campos.</div>';
     return;
   }
   S.activos.forEach(a=>{
-    const neto = (a.ingresos||0)-(a.gastos||0);
+    const neto=(a.ingresos||0)-(a.gastos||0);
     const el=document.createElement('div'); el.className='ac';
     el.innerHTML=`
       <div class="ah" onclick="togA(${a.id})">
@@ -604,7 +659,7 @@ function addActivo(){
 function addMov(id){
   const a=S.activos.find(x=>x.id===id); if(!a) return;
   const fecha=prompt('Fecha:'); if(!fecha) return;
-  const tipo=prompt('Tipo: ingreso o gasto')?.toLowerCase().trim(); if(!tipo) return;
+  const tipo=prompt('ingreso o gasto:')?.toLowerCase().trim(); if(!tipo) return;
   const desc=prompt('Descripción:'); if(!desc) return;
   const monto=parseFloat(prompt('Monto U$S:')); if(isNaN(monto)) return;
   a.movimientos=a.movimientos||[];
@@ -614,7 +669,7 @@ function addMov(id){
 }
 function delA(id){ if(!confirm('¿Eliminar?')) return; S.activos=S.activos.filter(x=>x.id!==id); save(); renderActivos(); }
 
-// ══ PATRIMONIO ══
+// PATRIMONIO
 function renderPatrimonio(){
   let bursatil=0;
   S.holdings.forEach(h=>bursatil+=h.units*h.currentPrice);
@@ -628,14 +683,16 @@ function renderPatrimonio(){
     <div class="pat-row"><span><span class="pdot" style="background:${i.c}"></span>${i.l}</span><span>U$S ${(i.v||0).toLocaleString()}</span></div>`).join('');
 }
 
-// ══ INIT ══
+// INIT
 function init(){
   renderHoldings(); renderPlan(); renderActivos();
   if(S.lastUpdate){
     const d=new Date(S.lastUpdate);
-    document.getElementById('lastUpd').innerHTML=d.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})+'<br>'+d.toLocaleDateString('es-UY',{day:'2-digit',month:'short'});
+    document.getElementById('lastUpd').innerHTML=
+      d.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})+'<br>'+
+      d.toLocaleDateString('es-UY',{day:'2-digit',month:'short'});
   }
-  setTimeout(refreshAll, 600);
+  setTimeout(refreshAll,800);
   if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
 init();

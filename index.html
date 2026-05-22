@@ -29,7 +29,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   display:flex;justify-content:space-between;align-items:center}
 .topbar-left{display:flex;align-items:center;gap:8px}
 .topbar img{width:30px;height:30px;border-radius:0}
-.topbar-title{font-family:'Fraunces',serif;font-size:18px;font-weight:300}
+.topbar-title{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;letter-spacing:2px;color:var(--text)}
 .topbar-title span{font-style:italic;color:var(--accent)}
 .topbar-right{display:flex;align-items:center;gap:8px}
 .upd{font-size:8px;color:var(--muted);text-align:right;line-height:1.5}
@@ -180,7 +180,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 }
 #authScreen.hidden{display:none}
 .auth-logo{width:72px;height:72px;border-radius:18px;margin-bottom:20px}
-.auth-title{font-family:'Fraunces',serif;font-size:26px;font-weight:300;margin-bottom:6px}
+.auth-title{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;letter-spacing:3px;color:var(--text);margin-bottom:6px}
 .auth-title span{font-style:italic;color:var(--accent)}
 .auth-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:48px}
 .auth-finger{
@@ -222,7 +222,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 <!-- ══ AUTH SCREEN ══ -->
 <div id="authScreen">
   <img class="auth-logo" src="./icon-192.png" alt="">
-  <div class="auth-title">inver<span>siones</span></div>
+  <div class="auth-title">INVERSIONES</div>
   <div class="auth-sub">acceso seguro</div>
   <div id="authSetup" style="display:none;flex-direction:column;align-items:center;width:100%;max-width:280px">
     <div class="auth-setup-msg">Primera vez. Configurá tu acceso biométrico o un PIN de 4 dígitos.</div>
@@ -263,7 +263,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 <div class="topbar">
   <div class="topbar-left">
     <img src="./icon-192.png" alt="Inversiones">
-    <div class="topbar-title">inver<span>siones</span></div>
+    <div class="topbar-title">INVERSIONES</div>
   </div>
   <div class="topbar-right">
     <div class="upd" id="lastUpd">—</div>
@@ -325,7 +325,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="goTo('portfolio',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
     Portfolio
   </button>
   <button class="nav-btn" onclick="goTo('mercado',this)">
@@ -333,11 +333,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     Mercado
   </button>
   <button class="nav-btn" onclick="goTo('activos',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>
     Activos
   </button>
   <button class="nav-btn" onclick="goTo('patrimonio',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><text x="12" y="19" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="bold">$</text></svg>
     Patrimonio
   </button>
 </nav>

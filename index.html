@@ -273,7 +273,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <div class="topbar-title">INVERSIONES</div>
   </div>
   <div class="topbar-right">
-    <button class="eye-btn" id="eyeBtn" onclick="toggleValues()" title="Mostrar/ocultar valores">👁</button>
+    <button class="eye-btn" id="eyeBtn" onclick="toggleValues()" title="Mostrar/ocultar valores">
+      <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="16" height="16">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
     <div class="upd" id="lastUpd">—</div>
     <button class="refresh-btn" onclick="refreshAll()" title="Actualizar">⟳</button>
   </div>
@@ -307,8 +312,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <button class="search-btn" onclick="searchTicker()">IR</button>
   </div>
   <div class="mkt-tabs">
-    <button class="mtab active" onclick="showMktTab('gainers',this)">▲ Subieron</button>
-    <button class="mtab" onclick="showMktTab('losers',this)">▼ Bajaron</button>
+    <button class="mtab active" onclick="showMktTab('gainers',this)">▲ Subió</button>
+    <button class="mtab" onclick="showMktTab('losers',this)">▼ Bajó</button>
+    <button class="mtab" onclick="showMktTab('todas',this)">≡ Todas</button>
     <button class="mtab" onclick="showMktTab('seguidos',this)">★ Seguidos</button>
   </div>
   <div id="mktContent"></div>
@@ -512,6 +518,7 @@ function renderHoldings(){
   de.textContent=(tDay>=0?'+':'')+'U$S '+tDay.toFixed(2);
   de.className='mv '+(tDay>=0?'green':'red');
   renderAlloc(tVal);
+  setTimeout(applyValuesState,50);
 }
 
 function togH(id){ document.getElementById('hd-'+id).classList.toggle('open'); }
@@ -551,10 +558,11 @@ function renderAlloc(tVal){
     if(t.k==='Agresivo') S.holdings.filter(h=>agg.includes(h.ticker)).forEach(h=>actual+=h.units*h.currentPrice);
     else { const h=S.holdings.find(h=>h.ticker===t.k); if(h) actual=h.units*h.currentPrice; }
     const fp=obj>0?Math.min((actual/obj)*100,100):0;
+    const actualPct = tVal>0?(actual/tVal*100):0;
     return `<div class="ar">
-      <div class="at"><span class="atk">${t.k} <span class="chip ${t.risk}">${t.rl}</span></span><span class="atp">${(t.pct*100).toFixed(0)}%</span></div>
+      <div class="at"><span class="atk">${t.k} <span class="chip ${t.risk}">${t.rl}</span></span><span class="atp">obj ${(t.pct*100).toFixed(0)}%</span></div>
       <div class="abg"><div class="af" style="width:${fp}%;background:${t.color}"></div></div>
-      <div class="as"><span>obj U$S ${obj.toFixed(0)}</span><span>actual U$S ${actual.toFixed(0)}</span></div>
+      <div class="as"><span>actual ${actualPct.toFixed(1)}%</span><span>meta ${(t.pct*100).toFixed(0)}%</span></div>
     </div>`;
   }).join('');
 }
@@ -575,7 +583,6 @@ function renderPlan(){
     <div class="pr ${p.done?'done':''} ${p.cur?'cur':''}">
       <span class="pm">${p.m}</span>
       <span class="pt ${p.cur?'ci':''}">${p.done?'✓ ':p.cur?'→ ':''}${p.t}</span>
-      <span class="pa">${p.a}</span>
     </div>`).join('');
 }
 
@@ -640,8 +647,10 @@ async function renderMkt(tab){
     return c ? {ticker:x.t, name:x.n, ...c} : null;
   }).filter(Boolean);
 
-  rows.sort((a,b)=>tab==='gainers'?b.dayChange-a.dayChange:a.dayChange-b.dayChange);
-  buildMktRows(rows.slice(0,12), cont, false);
+  if(tab==='gainers') rows.sort((a,b)=>b.dayChange-a.dayChange);
+  else if(tab==='losers') rows.sort((a,b)=>a.dayChange-b.dayChange);
+  // 'todas' mantiene orden original
+  buildMktRows(tab==='todas'?rows:rows.slice(0,12), cont, false);
 }
 
 function buildMktRows(rows, cont, showEmpty){
@@ -780,6 +789,7 @@ function renderPatrimonio(){
   const items=[{l:'Portfolio bursátil',v:bursatil,c:'var(--accent)'},...S.activos.map((a,i)=>({l:a.name,v:a.valor||0,c:colors[(i+1)%colors.length]}))];
   document.getElementById('patDetalle').innerHTML=items.map(i=>`
     <div class="pat-row"><span><span class="pdot" style="background:${i.c}"></span>${i.l}</span><span class="val-mask">U$S ${(i.v||0).toLocaleString()}</span></div>`).join('');
+  setTimeout(applyValuesState,50);
 }
 
 function init(){
@@ -1021,18 +1031,16 @@ function toggleValues(){
 function applyValuesState(){
   const btn = document.getElementById('eyeBtn');
   if(!btn) return;
+  const eyeSVG_open = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const eyeSVG_closed = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="16" height="16"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
   if(valuesHidden){
-    btn.textContent = '🙈';
+    btn.innerHTML = eyeSVG_closed;
     btn.classList.add('hidden-mode');
-    document.querySelectorAll('.val-mask').forEach(el => {
-      el.classList.add('val-hidden');
-    });
+    document.querySelectorAll('.val-mask').forEach(el => el.classList.add('val-hidden'));
   } else {
-    btn.textContent = '👁';
+    btn.innerHTML = eyeSVG_open;
     btn.classList.remove('hidden-mode');
-    document.querySelectorAll('.val-mask').forEach(el => {
-      el.classList.remove('val-hidden');
-    });
+    document.querySelectorAll('.val-mask').forEach(el => el.classList.remove('val-hidden'));
   }
 }
 

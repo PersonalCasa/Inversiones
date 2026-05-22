@@ -29,7 +29,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   backdrop-filter:blur(12px);padding:12px 16px;border-bottom:1px solid var(--border);
   display:flex;justify-content:space-between;align-items:center}
 .topbar-left{display:flex;align-items:center;gap:8px}
-.topbar img{width:30px;height:30px;border-radius:7px}
+.topbar img{width:30px;height:30px;border-radius:0}
 .topbar-title{font-family:'Fraunces',serif;font-size:18px;font-weight:300}
 .topbar-title span{font-style:italic;color:var(--accent)}
 .topbar-right{display:flex;align-items:center;gap:8px}
@@ -848,19 +848,31 @@ async function triggerBiometric(){
   try {
     const challenge = new Uint8Array(32);
     crypto.getRandomValues(challenge);
+    // Construir allowCredentials si tenemos credId guardado
+    const allowCreds = [];
+    if(auth.credId){
+      const credBytes = Uint8Array.from(atob(auth.credId), c => c.charCodeAt(0));
+      allowCreds.push({ type:'public-key', id: credBytes, transports:['internal'] });
+    }
     await navigator.credentials.get({
       publicKey:{
         challenge,
         rpId: location.hostname||'localhost',
         userVerification:'required',
-        timeout:60000
+        timeout:60000,
+        allowCredentials: allowCreds
       }
     });
     msg.textContent = '✓ Acceso concedido';
     msg.className = 'auth-msg ok';
     setTimeout(unlockApp, 400);
   } catch(e){
-    msg.textContent = 'Autenticación fallida — intentá con PIN';
+    console.log('Bio error:', e.name, e.message);
+    if(e.name === 'NotAllowedError'){
+      msg.textContent = 'Cancelado — usá PIN';
+    } else {
+      msg.textContent = 'Huella no disponible — usá PIN';
+    }
     msg.className = 'auth-msg err';
     setTimeout(showPinLogin, 1200);
   }

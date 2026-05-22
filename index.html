@@ -384,18 +384,22 @@ function goTo(page,btn){
 async function fetchFinnhub(ticker){
   const sym = toFinnhub(ticker);
   try {
-    const url = `https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FKEY}`;
-    const r = await fetch(url, {signal:AbortSignal.timeout(8000)});
+    // Token en URL solamente — sin headers custom para evitar CORS preflight
+    const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${FKEY}`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if(!r.ok) return null;
     const d = await r.json();
-    // d.c = current, d.pc = prev close, d.dp = % change, d.d = change
-    if(!d || d.c === 0 || d.c === undefined) return null;
+    if(!d || d.c === 0 || d.c === undefined || d.c === null) return null;
     return {
       price: d.c,
       prevClose: d.pc,
       dayChange: d.dp || 0,
       dayDiff: d.d || 0
     };
-  } catch(e){ return null; }
+  } catch(e){
+    console.log('Finnhub error:', ticker, e.message);
+    return null;
+  }
 }
 
 async function fetchFinnhubProfile(ticker){

@@ -39,6 +39,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 .eye-btn{background:none;border:1px solid var(--border);border-radius:7px;
   padding:5px 9px;color:var(--muted);cursor:pointer;font-size:13px;transition:all .2s}
 .eye-btn.hidden-mode{color:var(--accent);border-color:var(--accent)}
+.eye-btn.bell-on{color:var(--accent);border-color:var(--accent)}
 .val-hidden{position:relative;color:transparent!important;user-select:none;display:inline-flex;align-items:center;vertical-align:middle}.val-hidden::after{content:"••••••";color:var(--muted);font-size:14px;letter-spacing:1px;line-height:1;position:absolute;left:0;right:0;text-align:center}
 .dots-val{letter-spacing:2px;color:var(--muted)}
 
@@ -337,6 +338,13 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <div class="topbar-title">INVERSIONES</div>
   </div>
   <div class="topbar-right">
+    <button class="eye-btn" id="bellBtn" onclick="toggleNotifications()" title="Alertas">
+      <svg id="bellIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="16" height="16">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        <line id="bellSlash" x1="1" y1="1" x2="23" y2="23" style="display:none"/>
+      </svg>
+    </button>
     <button class="eye-btn" id="eyeBtn" onclick="toggleValues()" title="Mostrar/ocultar valores">
       <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="16" height="16">
         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -374,7 +382,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 <div class="page" id="page-mercado">
   <div style="display:flex;gap:6px;margin-bottom:10px">
     <button class="btn" style="flex:1;background:rgba(0,212,168,0.08);border:1px solid rgba(0,212,168,0.2);color:var(--accent);font-size:9px;padding:7px;letter-spacing:1px" onclick="abrirSimulador()">⟳ Simulador</button>
-    <button class="btn" style="flex:1;background:rgba(58,123,213,0.08);border:1px solid rgba(58,123,213,0.2);color:var(--accent2);font-size:9px;padding:7px;letter-spacing:1px" onclick="requestNotifications()">🔔 Activar alertas</button>
+    <button id="notifBtn" onclick="toggleNotifications()" style="flex:1;background:rgba(58,123,213,0.08);border:1px solid rgba(58,123,213,0.2);border-radius:8px;color:var(--accent2);font-size:9px;padding:7px;letter-spacing:1px;cursor:pointer;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;gap:6px">
+    <svg id="notifIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="14" height="14">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      <line id="notifSlash" x1="1" y1="1" x2="23" y2="23" style="display:none"/>
+    </svg>
+    <span id="notifLabel">Alertas</span>
+  </button>
   </div>
   <div class="search-bar">
     <input class="search-inp" id="searchInp" placeholder="Buscar ticker: SPY, BTC, NVDA..." onkeydown="if(event.key==='Enter')searchTicker()">
@@ -490,7 +505,7 @@ function goTo(page,btn){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   btn.classList.add('active'); curPage=page;
-  if(page==='mercado') renderMkt('todas');
+  if(page==='mercado'){ renderMkt('todas'); setTimeout(updateNotifBtn,100); }
   if(page==='patrimonio') renderPatrimonio();
   if(page==='operaciones'){ renderOps(); setTimeout(applyValuesState,80); }
 }
@@ -697,24 +712,66 @@ function renderPlan(){
 
 // MERCADO
 const MKT_LIST = [
-  {t:'SPY',   n:'S&P 500 ETF',         cat:'etf'},
-  {t:'QQQ',   n:'Nasdaq 100 ETF',       cat:'etf'},
-  {t:'URTH',  n:'MSCI World ETF',       cat:'etf'},
-  {t:'IWM',   n:'Russell 2000 ETF',     cat:'etf'},
-  {t:'GLD',   n:'Gold ETF',             cat:'etf'},
-  {t:'NVDA',  n:'NVIDIA',               cat:'tech'},
-  {t:'AAPL',  n:'Apple',                cat:'tech'},
-  {t:'MSFT',  n:'Microsoft',            cat:'tech'},
-  {t:'AMZN',  n:'Amazon',               cat:'tech'},
-  {t:'GOOG',  n:'Alphabet',             cat:'tech'},
-  {t:'META',  n:'Meta',                 cat:'tech'},
-  {t:'TSLA',  n:'Tesla',                cat:'tech'},
-  {t:'AMD',   n:'AMD',                  cat:'tech'},
-  {t:'BTC-USD',n:'Bitcoin',             cat:'crypto'},
-  {t:'ETH-USD',n:'Ethereum',            cat:'crypto'},
-  {t:'SOL-USD',n:'Solana',              cat:'crypto'},
-  {t:'NU',    n:'Nu Holdings',          cat:'otros'},
-  {t:'JPM',   n:'JPMorgan Chase',       cat:'otros'},
+  // ETFs
+  {t:'SPY',   n:'S&P 500 ETF',          cat:'etf'},
+  {t:'QQQ',   n:'Nasdaq 100 ETF',        cat:'etf'},
+  {t:'VTI',   n:'Vanguard Total US',     cat:'etf'},
+  {t:'URTH',  n:'MSCI World ETF',        cat:'etf'},
+  {t:'IWM',   n:'Russell 2000 ETF',      cat:'etf'},
+  {t:'EEM',   n:'Mercados Emergentes',   cat:'etf'},
+  {t:'EWZ',   n:'Brasil ETF',            cat:'etf'},
+  {t:'GLD',   n:'Gold ETF',              cat:'etf'},
+  {t:'SLV',   n:'Silver ETF',            cat:'etf'},
+  {t:'TLT',   n:'Bonos 20yr ETF',        cat:'etf'},
+  {t:'XLF',   n:'Financials ETF',        cat:'etf'},
+  {t:'XLE',   n:'Energy ETF',            cat:'etf'},
+  {t:'XLK',   n:'Technology ETF',        cat:'etf'},
+  {t:'ARKK',  n:'ARK Innovation ETF',    cat:'etf'},
+  {t:'VGT',   n:'Vanguard Tech ETF',     cat:'etf'},
+  {t:'SCHD',  n:'Schwab Dividend ETF',   cat:'etf'},
+  {t:'DIA',   n:'Dow Jones ETF',         cat:'etf'},
+  {t:'IDRV',  n:'Electric Vehicles ETF', cat:'etf'},
+  // Tech
+  {t:'NVDA',  n:'NVIDIA',                cat:'tech'},
+  {t:'AAPL',  n:'Apple',                 cat:'tech'},
+  {t:'MSFT',  n:'Microsoft',             cat:'tech'},
+  {t:'AMZN',  n:'Amazon',                cat:'tech'},
+  {t:'GOOG',  n:'Alphabet',              cat:'tech'},
+  {t:'META',  n:'Meta',                  cat:'tech'},
+  {t:'TSLA',  n:'Tesla',                 cat:'tech'},
+  {t:'AMD',   n:'AMD',                   cat:'tech'},
+  {t:'ORCL',  n:'Oracle',                cat:'tech'},
+  {t:'CRM',   n:'Salesforce',            cat:'tech'},
+  {t:'NFLX',  n:'Netflix',               cat:'tech'},
+  {t:'ADBE',  n:'Adobe',                 cat:'tech'},
+  {t:'INTC',  n:'Intel',                 cat:'tech'},
+  {t:'QCOM',  n:'Qualcomm',              cat:'tech'},
+  {t:'UBER',  n:'Uber',                  cat:'tech'},
+  {t:'SHOP',  n:'Shopify',               cat:'tech'},
+  {t:'SNOW',  n:'Snowflake',             cat:'tech'},
+  {t:'PLTR',  n:'Palantir',              cat:'tech'},
+  // Finanzas
+  {t:'JPM',   n:'JPMorgan Chase',        cat:'fin'},
+  {t:'GS',    n:'Goldman Sachs',         cat:'fin'},
+  {t:'BAC',   n:'Bank of America',       cat:'fin'},
+  {t:'V',     n:'Visa',                  cat:'fin'},
+  {t:'MA',    n:'Mastercard',            cat:'fin'},
+  {t:'BRK-B', n:'Berkshire Hathaway',    cat:'fin'},
+  {t:'NU',    n:'Nu Holdings',           cat:'fin'},
+  // Salud/Consumo
+  {t:'JNJ',   n:'Johnson & Johnson',     cat:'otros'},
+  {t:'PFE',   n:'Pfizer',                cat:'otros'},
+  {t:'NVO',   n:'Novo Nordisk',          cat:'otros'},
+  {t:'WMT',   n:'Walmart',               cat:'otros'},
+  {t:'KO',    n:'Coca-Cola',             cat:'otros'},
+  {t:'MCD',   n:'McDonald's',           cat:'otros'},
+  {t:'XOM',   n:'ExxonMobil',            cat:'otros'},
+  // Crypto
+  {t:'BTC-USD',n:'Bitcoin',              cat:'crypto'},
+  {t:'ETH-USD',n:'Ethereum',             cat:'crypto'},
+  {t:'SOL-USD',n:'Solana',               cat:'crypto'},
+  {t:'BNB-USD',n:'BNB',                  cat:'crypto'},
+  {t:'XRP-USD',n:'XRP',                  cat:'crypto'},
 ];
 
 let mktTab = 'todas';
@@ -920,6 +977,8 @@ function init(){
     }
   });
   setTimeout(refreshAll,800);
+  updateNotifBtn();
+  updateNotifBtn();
   renderOps();
   applyValuesState();
   if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
@@ -1619,17 +1678,66 @@ async function abrirSimulador(){
 }
 
 // ── NOTIFICACIONES PUSH ──
-async function requestNotifications(){
+async function toggleNotifications(){
   if(!('Notification' in window)){ alert('Tu navegador no soporta notificaciones'); return; }
-  const perm = await Notification.requestPermission();
-  if(perm === 'granted'){
-    localStorage.setItem('inv_notif', '1');
-    new Notification('Inversiones', { body: '✅ Notificaciones activadas', icon: './icon-192.png' });
+  if(Notification.permission === 'denied'){
+    alert('Notificaciones bloqueadas. Habilitálas en Ajustes del celular → Chrome → Notificaciones.');
+    return;
+  }
+  if(Notification.permission !== 'granted'){
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){
+      alert('Permiso denegado.');
+      return;
+    }
+  }
+  // Toggle on/off
+  const isOn = localStorage.getItem('inv_notif') === '1';
+  localStorage.setItem('inv_notif', isOn ? '0' : '1');
+  updateNotifBtn();
+  if(!isOn){
+    new Notification('Inversiones — Alertas activadas ✅', {
+      body: 'Te avisaré cuando tus posiciones se muevan.',
+      icon: './icon-192.png'
+    });
   }
 }
 
+function updateNotifBtn(){
+  const active = typeof Notification !== 'undefined' &&
+    Notification.permission === 'granted' &&
+    localStorage.getItem('inv_notif') === '1';
+
+  // Campana en topbar
+  const bell = document.getElementById('bellBtn');
+  const bellIcon = document.getElementById('bellIcon');
+  const bellSlash = document.getElementById('bellSlash');
+  if(bell){
+    bell.classList.toggle('bell-on', active);
+    if(bellIcon) bellIcon.style.stroke = active ? 'var(--accent)' : 'var(--muted)';
+    if(bellSlash) bellSlash.style.display = active ? 'none' : 'block';
+  }
+
+  // Botón en mercado
+  const btn = document.getElementById('notifBtn');
+  const slash = document.getElementById('notifSlash');
+  const label = document.getElementById('notifLabel');
+  if(btn){
+    btn.style.background = active ? 'rgba(0,212,168,0.1)' : 'rgba(58,123,213,0.08)';
+    btn.style.borderColor = active ? 'rgba(0,212,168,0.3)' : 'rgba(58,123,213,0.2)';
+    btn.style.color = active ? 'var(--accent)' : 'var(--muted)';
+    if(slash) slash.style.display = active ? 'none' : 'block';
+    if(label) label.textContent = active ? '🔔 Alertas ON' : '🔕 Alertas OFF';
+  }
+}
+
+async function requestNotifications(){ await toggleNotifications(); }
+
 function checkAlertNotifications(){
+  if(typeof Notification === 'undefined') return;
   if(Notification.permission !== 'granted') return;
+  if(localStorage.getItem('inv_notif') !== '1') return;
+  if(localStorage.getItem('inv_notif') !== '1') return;
   const alerted = JSON.parse(sessionStorage.getItem('inv_alerted')||'{}');
 
   // ── POSICIONES PROPIAS ──

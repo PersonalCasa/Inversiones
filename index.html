@@ -55,6 +55,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;
   font-size:8px;letter-spacing:1px;text-transform:uppercase;transition:color .2s}
 .nav-btn.active{color:var(--accent)}
+.nav-center{position:relative;margin-top:-12px;background:var(--bg2);
+  border:2px solid var(--accent);border-radius:14px;padding:10px 14px 8px;
+  box-shadow:0 0 16px rgba(0,212,168,0.2)}
+.nav-center.active{color:var(--accent)}
 .nav-btn svg{width:20px;height:20px}
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
@@ -368,6 +372,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 
 <!-- MERCADO -->
 <div class="page" id="page-mercado">
+  <div style="display:flex;gap:6px;margin-bottom:10px">
+    <button class="btn" style="flex:1;background:rgba(0,212,168,0.08);border:1px solid rgba(0,212,168,0.2);color:var(--accent);font-size:9px;padding:7px;letter-spacing:1px" onclick="abrirSimulador()">⟳ Simulador</button>
+    <button class="btn" style="flex:1;background:rgba(58,123,213,0.08);border:1px solid rgba(58,123,213,0.2);color:var(--accent2);font-size:9px;padding:7px;letter-spacing:1px" onclick="requestNotifications()">🔔 Activar alertas</button>
+  </div>
   <div class="search-bar">
     <input class="search-inp" id="searchInp" placeholder="Buscar ticker: SPY, BTC, NVDA..." onkeydown="if(event.key==='Enter')searchTicker()">
     <button class="search-btn" onclick="searchTicker()">IR</button>
@@ -416,15 +424,15 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   </div>
   <div class="sec">Posiciones cerradas</div>
   <div id="closedList"></div>
+  <div style="display:flex;gap:6px;margin-bottom:8px">
+    <button class="btn" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:9px;padding:7px" onclick="exportarHistorial()">↓ Exportar historial</button>
+    <button class="btn" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:9px;padding:7px" onclick="exportarPortfolio()">↓ Exportar portfolio</button>
+  </div>
   <div class="sec">Historial</div>
   <div id="opsList"></div>
 </div>
 
 <nav class="bottom-nav">
-  <button class="nav-btn active" onclick="goTo('portfolio',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-    Portfolio
-  </button>
   <button class="nav-btn" onclick="goTo('operaciones',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     Historial
@@ -432,6 +440,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   <button class="nav-btn" onclick="goTo('mercado',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/><polyline points="16,7 22,7 22,13"/></svg>
     Mercado
+  </button>
+  <button class="nav-btn nav-center active" id="navPortfolio" onclick="goTo('portfolio',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+    Portfolio
   </button>
   <button class="nav-btn" onclick="goTo('activos',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>
@@ -553,6 +565,7 @@ async function refreshAll(){
   else ab.classList.remove('show');
 
   renderHoldings();
+  checkAlertNotifications();
   if(curPage==='mercado'){
     const activeTab = document.querySelector('.mtab.active');
     const tab = activeTab?.textContent.includes('Sub')?'gainers':activeTab?.textContent.includes('Baj')?'losers':'seguidos';
@@ -1392,7 +1405,7 @@ function drawChart(container, data, ticker, period, ops=[]){
 
   const closes = data.closes;
   const times = data.times;
-  const W = 360, H = 140;
+  const W = 360, H = 160;
   const pad = {top:10, right:10, bottom:20, left:8};
   const cW = W - pad.left - pad.right;
   const cH = H - pad.top - pad.bottom;
@@ -1446,6 +1459,7 @@ function drawChart(container, data, ticker, period, ops=[]){
     `<span class="chart-tab ${p===period?'active':''}" onclick="loadChart('${ticker}','${p}')">${p}</span>`
   ).join('');
 
+  const chartId = 'chart_' + Date.now();
   container.innerHTML = `
     <div class="chart-panel">
       <div class="chart-header">
@@ -1458,7 +1472,7 @@ function drawChart(container, data, ticker, period, ops=[]){
         </div>
       </div>
       <div class="chart-tabs">${tabs}</div>
-      <svg class="chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <svg class="chart-svg" id="${chartId}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" onmousemove="chartHover(event,this,closes,times,${W},${H})" ontouchmove="chartHover(event,this,closes,times,${W},${H})" onmouseleave="chartLeave(this)" ontouchend="chartLeave(this)">
         <defs>
           <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.2"/>
@@ -1468,6 +1482,11 @@ function drawChart(container, data, ticker, period, ops=[]){
         <path d="${areaPath}" fill="url(#cg)"/>
         <polyline points="${pts}" fill="none" stroke="${lineColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         ${opsMarkers}
+        <!-- Línea de crosshair -->
+        <line id="crossV" x1="0" y1="10" x2="0" y2="${H-20}" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-dasharray="3" style="display:none"/>
+        <rect id="tooltipBg" x="0" y="0" width="90" height="30" rx="4" fill="var(--surface)" stroke="var(--border)" style="display:none"/>
+        <text id="tooltipPrice" x="0" y="0" font-size="10" fill="var(--text)" font-family="DM Mono,monospace" style="display:none"></text>
+        <text id="tooltipDate" x="0" y="0" font-size="8" fill="var(--muted)" font-family="DM Mono,monospace" style="display:none"></text>
       </svg>
       <div class="chart-stats">
         <div class="chart-stat"><div class="chart-stat-lbl">Máx</div><div class="chart-stat-val">U$S ${high.toFixed(2)}</div></div>
@@ -1513,6 +1532,219 @@ function openMktDetail(ticker, price){
   window._buyPrice = price;
   loadChart(ticker, '1M', 'market');
   document.getElementById('chartPanel').scrollIntoView({behavior:'smooth'});
+}
+
+
+
+
+
+// ── EXPORTAR EXCEL (CSV) ──
+function exportarHistorial(){
+  const ops = S.ops||[];
+  if(!ops.length){ alert('Sin operaciones para exportar'); return; }
+  const headers = ['Fecha','Tipo','Ticker','Precio U$S','Unidades','Total U$S','Comisión U$S','P&L U$S','P&L %'];
+  const rows = ops.map(o => [
+    o.fecha, o.tipo.toUpperCase(), o.ticker,
+    o.precio.toFixed(2), o.units.toFixed(4),
+    o.total.toFixed(2), (o.comision||0).toFixed(2),
+    o.pnl!=null?o.pnl.toFixed(2):'',
+    o.pnlPct!=null?o.pnlPct.toFixed(2)+'%':''
+  ]);
+  const csv = [headers, ...rows].map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='inversiones-historial.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportarPortfolio(){
+  const headers = ['Ticker','Nombre','Unidades','Precio promedio U$S','Precio actual U$S','Valor U$S','Ganancia U$S','Ganancia %','Cambio hoy %'];
+  const rows = S.holdings.map(h => {
+    const val = h.units*h.currentPrice;
+    const inv = h.units*h.buyPrice;
+    const gain = val-inv;
+    const gainPct = (gain/inv*100).toFixed(2);
+    return [h.ticker, h.name||'', h.units.toFixed(4), h.buyPrice.toFixed(2),
+      h.currentPrice.toFixed(2), val.toFixed(2), gain.toFixed(2), gainPct+'%', (h.dayChange||0).toFixed(2)+'%'];
+  });
+  const csv = [headers,...rows].map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='inversiones-portfolio.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+
+// ── SIMULADOR ──
+async function abrirSimulador(){
+  const ticker = prompt('¿Qué instrumento querés simular? (ej: SPY, NVDA, URTH):');
+  if(!ticker) return;
+  const monto = parseFloat(prompt('¿Cuánto habrías invertido en U$S?:'));
+  if(isNaN(monto)||monto<=0) return;
+  const periodo = prompt('¿Hace cuánto? (1M, 6M, 1A, 5A):') || '1A';
+
+  const cont = document.getElementById('mktContent');
+  if(curPage!=='mercado'){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('page-mercado').classList.add('active');
+  }
+  cont.innerHTML = '<div class="loading-mkt"><span class="spinner"></span>&nbsp;&nbsp;calculando simulación...</div>';
+
+  const data = await fetchCandles(ticker.toUpperCase(), periodo);
+  if(!data||!data.closes.length){ cont.innerHTML='<div class="error-mkt">Sin datos para ese período</div>'; return; }
+
+  const precioInicio = data.closes[0];
+  const precioFin = data.closes[data.closes.length-1];
+  const unidades = monto / precioInicio;
+  const valorFinal = unidades * precioFin;
+  const ganancia = valorFinal - monto;
+  const ganPct = (ganancia/monto*100);
+  const isUp = ganancia >= 0;
+
+  cont.innerHTML = `
+    <div class="card" style="border-color:${isUp?'var(--accent)':'var(--accent3)'}">
+      <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Simulación — ${ticker.toUpperCase()} · ${periodo}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div><div style="font-size:8px;color:var(--muted);margin-bottom:3px">INVERTIDO</div><div style="font-size:16px">U$S ${monto.toFixed(0)}</div></div>
+        <div><div style="font-size:8px;color:var(--muted);margin-bottom:3px">VALOR HOY</div><div style="font-size:16px;color:${isUp?'var(--accent)':'var(--accent3)'}">U$S ${valorFinal.toFixed(0)}</div></div>
+        <div><div style="font-size:8px;color:var(--muted);margin-bottom:3px">GANANCIA</div><div style="font-size:16px;color:${isUp?'var(--accent)':'var(--accent3)'}">${isUp?'+':''}U$S ${ganancia.toFixed(0)}</div></div>
+        <div><div style="font-size:8px;color:var(--muted);margin-bottom:3px">RETORNO</div><div style="font-size:16px;color:${isUp?'var(--accent)':'var(--accent3)'}">${ganPct>=0?'+':''}${ganPct.toFixed(2)}%</div></div>
+      </div>
+      <div style="font-size:9px;color:var(--muted)">Precio entrada: U$S ${precioInicio.toFixed(2)} · Precio actual: U$S ${precioFin.toFixed(2)} · ${unidades.toFixed(4)} unidades</div>
+    </div>`;
+}
+
+// ── NOTIFICACIONES PUSH ──
+async function requestNotifications(){
+  if(!('Notification' in window)){ alert('Tu navegador no soporta notificaciones'); return; }
+  const perm = await Notification.requestPermission();
+  if(perm === 'granted'){
+    localStorage.setItem('inv_notif', '1');
+    new Notification('Inversiones', { body: '✅ Notificaciones activadas', icon: './icon-192.png' });
+  }
+}
+
+function checkAlertNotifications(){
+  if(Notification.permission !== 'granted') return;
+  const threshold = parseFloat(localStorage.getItem('inv_alert_pct') || '-3');
+  S.holdings.forEach(h => {
+    if((h.dayChange||0) <= threshold){
+      new Notification(`⚠️ ${h.ticker} cayó ${h.dayChange.toFixed(2)}% hoy`, {
+        body: `Valor actual: U$S ${h.currentPrice.toFixed(2)}`,
+        icon: './icon-192.png'
+      });
+    }
+  });
+}
+
+// ── BENCHMARK VS SPY ──
+let _showBenchmark = false;
+let _benchData = null;
+
+async function toggleBenchmark(ticker, period, btn){
+  _showBenchmark = !_showBenchmark;
+  btn.style.color = _showBenchmark ? 'var(--accent)' : 'var(--accent2)';
+  btn.textContent = _showBenchmark ? '✓ vs SPY' : 'vs SPY';
+  if(_showBenchmark && ticker !== 'SPY'){
+    _benchData = await fetchCandles('SPY', period);
+  } else {
+    _benchData = null;
+  }
+  // Recargar gráfico con benchmark
+  const cont = document.getElementById('chartPanel');
+  if(cont && cont.style.display!=='none'){
+    const data = await fetchCandles(ticker, period);
+    drawChartWithBenchmark(cont, data, _benchData, ticker, period, []);
+  }
+}
+
+function drawChartWithBenchmark(container, data, benchData, ticker, period, ops){
+  if(!data) { drawChart(container, data, ticker, period, ops); return; }
+  // Normalizar ambas series al 100 para comparar %
+  if(!benchData){ drawChart(container, data, ticker, period, ops); return; }
+  const norm = v => v.map(x => x / v[0] * 100);
+  const normMain = norm(data.closes);
+  const normBench = norm(benchData.closes);
+  // Interpolar bench al mismo largo que main
+  const benchInterp = normMain.map((_,i) => {
+    const bi = Math.round(i / normMain.length * normBench.length);
+    return normBench[Math.min(bi, normBench.length-1)];
+  });
+  const W=360, H=160, pad={top:10,right:10,bottom:20,left:8};
+  const cW=W-pad.left-pad.right, cH=H-pad.top-pad.bottom;
+  const allVals = [...normMain, ...benchInterp];
+  const minP=Math.min(...allVals), maxP=Math.max(...allVals), range=maxP-minP||1;
+  const xS = i => pad.left+(i/(normMain.length-1))*cW;
+  const yS = v => pad.top+cH-((v-minP)/range)*cH;
+  const pts1 = normMain.map((c,i)=>`${xS(i).toFixed(1)},${yS(c).toFixed(1)}`).join(' ');
+  const pts2 = benchInterp.map((c,i)=>`${xS(i).toFixed(1)},${yS(c).toFixed(1)}`).join(' ');
+  const isUp = normMain[normMain.length-1] >= 100;
+  const lineColor = isUp ? '#00d4a8' : '#ff6b6b';
+  const chgMain = normMain[normMain.length-1]-100;
+  const chgBench = benchInterp[benchInterp.length-1]-100;
+  const tabs = Object.keys(PERIODS).map(p =>
+    `<span class="chart-tab ${p===period?'active':''}" onclick="loadChart('${ticker}','${p}','market',null)">${p}</span>`
+  ).join('') + `<span class="chart-tab" style="color:var(--accent)" onclick="toggleBenchmark('${ticker}','${period}',this)" id="benchBtn">✓ vs SPY</span>`;
+  container.innerHTML = `<div class="chart-panel">
+    <div class="chart-header">
+      <div><div class="chart-ticker">${ticker}</div>
+        <div class="chart-chg ${isUp?'green':'red'}">${chgMain>=0?'+':''}${chgMain.toFixed(2)}% &nbsp;|&nbsp; <span style="color:var(--accent2)">SPY ${chgBench>=0?'+':''}${chgBench.toFixed(2)}%</span></div>
+      </div>
+      <div><div class="chart-price" style="font-size:10px;color:var(--muted)">Base 100 — ${period}</div></div>
+    </div>
+    <div class="chart-tabs">${tabs}</div>
+    <svg class="chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <polyline points="${pts2}" fill="none" stroke="var(--accent2)" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.7"/>
+      <polyline points="${pts1}" fill="none" stroke="${lineColor}" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <div class="chart-stats">
+      <div class="chart-stat"><div class="chart-stat-lbl">${ticker}</div><div class="chart-stat-val ${isUp?'green':'red'}">${chgMain>=0?'+':''}${chgMain.toFixed(2)}%</div></div>
+      <div class="chart-stat"><div class="chart-stat-lbl">SPY</div><div class="chart-stat-val ${chgBench>=0?'green':'red'}">${chgBench>=0?'+':''}${chgBench.toFixed(2)}%</div></div>
+      <div class="chart-stat"><div class="chart-stat-lbl">Diferencia</div><div class="chart-stat-val ${(chgMain-chgBench)>=0?'green':'red'}">${(chgMain-chgBench)>=0?'+':''}${(chgMain-chgBench).toFixed(2)}%</div></div>
+    </div>
+  </div>`;
+}
+
+// ── CHART ZOOM / TOOLTIP ──
+function chartHover(e, svg, closes, times, W, H){
+  e.preventDefault();
+  const rect = svg.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const x = (clientX - rect.left) * (W / rect.width);
+  const pad = {left:8, right:10, top:10, bottom:20};
+  const cW = W - pad.left - pad.right;
+  const idx = Math.max(0, Math.min(closes.length-1, Math.round((x - pad.left) / cW * (closes.length-1))));
+  const xPos = pad.left + (idx/(closes.length-1))*cW;
+
+  const crossV = svg.getElementById ? svg.getElementById('crossV') : svg.querySelector('#crossV');
+  const tBg = svg.querySelector('#tooltipBg');
+  const tPrice = svg.querySelector('#tooltipPrice');
+  const tDate = svg.querySelector('#tooltipDate');
+  if(!crossV||!tBg||!tPrice||!tDate) return;
+
+  crossV.setAttribute('x1', xPos); crossV.setAttribute('x2', xPos);
+  crossV.style.display = 'block';
+
+  const price = 'U$S ' + closes[idx].toFixed(2);
+  const date = times[idx] ? new Date(times[idx]*1000).toLocaleDateString('es-UY',{day:'2-digit',month:'short'}) : '';
+  tPrice.textContent = price;
+  tDate.textContent = date;
+
+  const txPos = Math.min(xPos + 4, W - 95);
+  tBg.setAttribute('x', txPos); tBg.setAttribute('y', '8');
+  tPrice.setAttribute('x', txPos + 5); tPrice.setAttribute('y', '22');
+  tDate.setAttribute('x', txPos + 5); tDate.setAttribute('y', '32');
+  tBg.style.display='block'; tPrice.style.display='block'; tDate.style.display='block';
+}
+
+function chartLeave(svg){
+  ['crossV','tooltipBg','tooltipPrice','tooltipDate'].forEach(id=>{
+    const el = svg.querySelector('#'+id);
+    if(el) el.style.display='none';
+  });
 }
 
 // ══ AUTH SYSTEM ══

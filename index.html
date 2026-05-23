@@ -185,6 +185,54 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 .closed-ticker{font-size:14px;font-weight:500}
 .closed-pnl{font-size:13px;text-align:right}
 .closed-detail{font-size:9px;color:var(--muted);margin-top:4px}
+
+/* MODAL TRADE */
+.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}
+.modal-overlay.hidden{display:none}
+.modal-panel{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-size:16px;font-weight:500;letter-spacing:1px}
+.modal-title .modal-ticker{color:var(--accent);margin-left:6px}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px}
+.modal-tabs{display:flex;gap:6px;margin-bottom:20px}
+.modal-tab{flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:transparent;
+  color:var(--muted);font-family:"DM Mono",monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:all .2s}
+.modal-tab.buy.active{background:rgba(0,212,168,0.12);border-color:var(--accent);color:var(--accent)}
+.modal-tab.sell.active{background:rgba(255,107,107,0.12);border-color:var(--accent3);color:var(--accent3)}
+.form-field{margin-bottom:14px}
+.form-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:12px 14px;color:var(--text);font-family:"DM Mono",monospace;font-size:14px;outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--accent)}
+.form-input.sell-focus:focus{border-color:var(--accent3)}
+.form-hint{font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:1px}
+.form-total{background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:12px 14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.form-total-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.form-total-val{font-size:16px;font-weight:500}
+.btn-confirm-buy{width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;
+  color:#060e1a;font-family:"DM Mono",monospace;font-size:13px;font-weight:500;cursor:pointer;letter-spacing:1px}
+.btn-confirm-sell{width:100%;padding:14px;background:var(--accent3);border:none;border-radius:10px;
+  color:white;font-family:"DM Mono",monospace;font-size:13px;font-weight:500;cursor:pointer;letter-spacing:1px}
+.btn-confirm-buy:disabled,.btn-confirm-sell:disabled{opacity:0.4;cursor:not-allowed}
+
+/* CHART */
+.chart-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.chart-header{padding:12px 14px 8px;display:flex;justify-content:space-between;align-items:flex-start}
+.chart-ticker{font-size:15px;font-weight:500}
+.chart-price{font-size:15px;text-align:right}
+.chart-chg{font-size:10px;margin-top:2px}
+.chart-tabs{display:flex;gap:2px;padding:0 14px 10px}
+.chart-tab{flex:1;padding:5px 2px;text-align:center;font-size:9px;color:var(--muted);
+  cursor:pointer;border-radius:5px;letter-spacing:1px;transition:all .2s;font-family:"DM Mono",monospace}
+.chart-tab.active{background:rgba(0,212,168,0.12);color:var(--accent)}
+.chart-svg{display:block;width:100%;cursor:crosshair}
+.chart-loading{text-align:center;padding:40px;color:var(--muted);font-size:10px}
+.chart-stats{display:flex;justify-content:space-around;padding:8px 14px 12px;border-top:1px solid var(--border)}
+.chart-stat{text-align:center}
+.chart-stat-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.chart-stat-val{font-size:11px}
 .spinner{display:inline-block;width:11px;height:11px;border:2px solid var(--border);
   border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-left:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -329,7 +377,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <button class="mtab" onclick="showMktTab('losers',this)">▼ Bajó</button>
     <button class="mtab" onclick="showMktTab('seguidos',this)">★ Seguidos</button>
   </div>
-  <div id="mktContent"></div>
+  <div id="chartPanel" style="display:none"></div>
+<div id="mktContent"></div>
 </div>
 
 <!-- ACTIVOS -->
@@ -542,6 +591,8 @@ function renderHoldings(){
         </div>
         <div class="irow"><span class="ilbl">Precio actual</span><input class="inp" id="ip-${h.id}" type="number" step="0.01" value="${h.currentPrice.toFixed(2)}"></div>
         <div class="irow"><span class="ilbl">Unidades</span><input class="inp" id="iu-${h.id}" type="number" step="0.000001" value="${h.units}"></div>
+        <div id="chart-${h.id}" style="margin-bottom:8px"></div>
+        <button style="width:100%;background:none;border:1px solid var(--border);border-radius:7px;padding:6px;color:var(--muted);font-size:9px;cursor:pointer;font-family:monospace;letter-spacing:1px;margin-bottom:6px" onclick="loadChartInHolding('${h.ticker}','${h.id}')">▲ ver gráfico</button>
         <button class="btn btn-s" onclick="saveH(${h.id})">guardar</button>
         <button class="btn" style="width:100%;margin-top:3px;background:rgba(0,212,168,0.12);color:var(--accent);border:1px solid rgba(0,212,168,0.3)" onclick="comprarMasDeHolding('${h.ticker}',${h.currentPrice})">+ comprar más</button>
         <button class="btn" style="width:100%;margin-top:3px;background:rgba(255,107,107,0.12);color:var(--accent3);border:1px solid rgba(255,107,107,0.25)" onclick="venderDesdeHolding('${h.ticker}')">− vender</button>
@@ -704,7 +755,7 @@ function buildMktRows(rows, cont, showEmpty){
   cont.innerHTML = rows.map(r=>{
     const up=r.dayChange>=0;
     const sig=S.seguidos.includes(r.ticker);
-    return `<div class="mkt-row">
+    return `<div class="mkt-row" onclick="openMktDetail('${r.ticker}',${r.price||0})" style="cursor:pointer">
       <div class="mkt-left">
         <div class="badge ${up?'up':'dn'}">${up?'▲':'▼'}</div>
         <div>
@@ -1121,6 +1172,312 @@ function save(){
   syncToGist().catch(()=>{});
 }
 
+
+// ══ TRADE MODAL ══
+let _modalTicker = '';
+let _modalPrice = 0;
+let _modalTab = 'buy';
+let _modalHolding = null;
+
+function openTradeModal(ticker, price, tab='buy'){
+  _modalTicker = ticker;
+  _modalPrice = parseFloat(price)||0;
+  _modalTab = tab;
+  _modalHolding = S.holdings.find(h=>h.ticker===ticker)||null;
+
+  document.getElementById('modalTicker').textContent = ' · ' + ticker;
+  document.getElementById('fFecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fPrecio').value = _modalPrice > 0 ? _modalPrice.toFixed(2) : '';
+  document.getElementById('fUnidades').value = '';
+  document.getElementById('fTotal').textContent = 'U$S 0.00';
+  document.getElementById('fPnlHint').style.display = 'none';
+
+  if(tab === 'sell'){
+    document.getElementById('fPriceHint').textContent = _modalHolding ? `(promedio compra: U$S ${_modalHolding.buyPrice.toFixed(2)})` : '';
+    document.getElementById('fUnitsHint').textContent = _modalHolding ? `(tenés ${_modalHolding.units.toFixed(4)})` : '';
+  } else {
+    document.getElementById('fPriceHint').textContent = _modalPrice > 0 ? `(precio actual: U$S ${_modalPrice.toFixed(2)})` : '';
+    document.getElementById('fUnitsHint').textContent = '';
+  }
+
+  setModalTab(tab);
+  document.getElementById('tradeModal').classList.remove('hidden');
+  document.getElementById('btnConfirm').disabled = true;
+}
+
+function setModalTab(tab){
+  _modalTab = tab;
+  document.getElementById('tabBuy').classList.toggle('active', tab==='buy');
+  document.getElementById('tabSell').classList.toggle('active', tab==='sell');
+  const btn = document.getElementById('btnConfirm');
+  btn.className = tab==='buy' ? 'btn-confirm-buy' : 'btn-confirm-sell';
+  btn.textContent = tab==='buy' ? 'CONFIRMAR COMPRA' : 'CONFIRMAR VENTA';
+
+  if(tab==='sell' && _modalHolding){
+    document.getElementById('fPriceHint').textContent = `promedio compra: U$S ${_modalHolding.buyPrice.toFixed(2)}`;
+    document.getElementById('fUnitsHint').textContent = `tenés ${_modalHolding.units.toFixed(4)}`;
+  }
+  updateTotal();
+}
+
+function updateTotal(){
+  const precio = parseFloat(document.getElementById('fPrecio').value)||0;
+  const units = parseFloat(document.getElementById('fUnidades').value)||0;
+  const fecha = document.getElementById('fFecha').value;
+  const total = precio * units;
+  document.getElementById('fTotal').textContent = total > 0 ? 'U$S ' + total.toFixed(2) : 'U$S 0.00';
+
+  // P&L hint en venta
+  if(_modalTab==='sell' && _modalHolding && precio > 0 && units > 0){
+    const pnl = (precio - _modalHolding.buyPrice) * units;
+    const pnlPct = (precio - _modalHolding.buyPrice)/_modalHolding.buyPrice*100;
+    const hint = document.getElementById('fPnlHint');
+    hint.style.display = 'block';
+    hint.innerHTML = `P&L estimado: <span class="${pnl>=0?'green':'red'}">${pnl>=0?'+':''}U$S ${pnl.toFixed(2)} (${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%)</span>`;
+  } else {
+    document.getElementById('fPnlHint').style.display = 'none';
+  }
+
+  // Habilitar botón solo si todos los campos están completos
+  document.getElementById('btnConfirm').disabled = !(precio > 0 && units > 0 && fecha);
+}
+
+function confirmarOperacion(){
+  const precio = parseFloat(document.getElementById('fPrecio').value);
+  const units = parseFloat(document.getElementById('fUnidades').value);
+  const fechaRaw = document.getElementById('fFecha').value;
+  if(!precio || !units || !fechaRaw){ alert('Completá todos los campos'); return; }
+
+  const fecha = new Date(fechaRaw).toLocaleDateString('es-UY');
+  const total = precio * units;
+
+  if(_modalTab === 'buy'){
+    const comision = total*0.02 + 0.99;
+    const op = { id:Date.now(), tipo:'compra', ticker:_modalTicker, fecha, precio, units, total, comision };
+    S.ops = S.ops||[]; S.ops.unshift(op);
+    const existing = S.holdings.find(h=>h.ticker===_modalTicker);
+    if(existing){
+      const totalUnits = existing.units + units;
+      existing.buyPrice = Math.round(((existing.buyPrice*existing.units + precio*units)/totalUnits)*10000)/10000;
+      existing.units = totalUnits;
+    } else {
+      S.holdings.push({id:Date.now()+1,ticker:_modalTicker,name:'',units,buyPrice:precio,currentPrice:_modalPrice||precio,dayChange:0,prevClose:precio});
+    }
+    save(); renderHoldings(); renderOps();
+    closeTradeModalDirect();
+
+  } else {
+    // VENTA
+    const holding = S.holdings.find(h=>h.ticker===_modalTicker);
+    if(!holding){ alert('No tenés esa posición'); return; }
+    if(units > holding.units){ alert(`Solo tenés ${holding.units.toFixed(4)} unidades`); return; }
+    const pnl = (precio - holding.buyPrice) * units;
+    const pnlPct = (precio - holding.buyPrice)/holding.buyPrice*100;
+    const comision = total*0.01;
+    const op = { id:Date.now(), tipo:'venta', ticker:_modalTicker, fecha, precio, units, total, pnl, pnlPct, buyPrice:holding.buyPrice, comision };
+    S.ops = S.ops||[]; S.ops.unshift(op);
+    holding.units -= units;
+    if(holding.units <= 0.0001){
+      S.closed = S.closed||[];
+      S.closed.unshift({ticker:holding.ticker,name:holding.name,fechaVenta:fecha,buyPrice:holding.buyPrice,sellPrice:precio,units,pnl,pnlPct});
+      S.holdings = S.holdings.filter(h=>h.ticker!==_modalTicker);
+    }
+    save(); renderHoldings(); renderOps();
+    closeTradeModalDirect();
+  }
+}
+
+function closeTradeModal(e){ if(e.target===document.getElementById('tradeModal')) closeTradeModalDirect(); }
+function closeTradeModalDirect(){ document.getElementById('tradeModal').classList.add('hidden'); }
+
+// Reemplazar funciones antiguas
+function comprarDesdeMercado(){
+  openTradeModal(window._buyTicker||'', window._buyPrice||0, 'buy');
+}
+function comprarMasDeHolding(ticker, precio){
+  openTradeModal(ticker, precio, 'buy');
+}
+function venderDesdeHolding(ticker){
+  openTradeModal(ticker, S.holdings.find(h=>h.ticker===ticker)?.currentPrice||0, 'sell');
+}
+function registrarCompra(){ openTradeModal('', 0, 'buy'); }
+function registrarVenta(){
+  const tickers = S.holdings.map(h=>h.ticker).join(', ');
+  const t = prompt('¿Qué vendés? (' + tickers + '):');
+  if(!t) return;
+  const h = S.holdings.find(h=>h.ticker===t.toUpperCase());
+  if(!h){ alert('No tenés esa posición'); return; }
+  openTradeModal(h.ticker, h.currentPrice, 'sell');
+}
+
+// ══ CHART ══
+const PERIODS = {
+  '1D': {resolution:'5',  days:1},
+  '1S': {resolution:'60', days:7},
+  '1M': {resolution:'D',  days:30},
+  '6M': {resolution:'D',  days:180},
+  '1A': {resolution:'W',  days:365},
+  '5A': {resolution:'W',  days:1825},
+  '10A':{resolution:'M',  days:3650},
+};
+
+let _chartTicker = '';
+let _chartPeriod = '1M';
+let _chartContext = 'market'; // 'market' | 'holding'
+let _chartHoldingId = null;
+
+async function fetchCandles(ticker, period){
+  const {resolution, days} = PERIODS[period];
+  const to = Math.floor(Date.now()/1000);
+  const from = to - days*86400;
+  const sym = ticker.replace('-USD','USDT');
+  const isCrypto = ticker.includes('-USD');
+
+  try {
+    let url;
+    if(isCrypto){
+      url = `https://finnhub.io/api/v1/crypto/candle?symbol=BINANCE:${sym}&resolution=${resolution}&from=${from}&to=${to}&token=${FKEY}`;
+    } else {
+      url = `https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=${resolution}&from=${from}&to=${to}&token=${FKEY}`;
+    }
+    const r = await fetch(url, {signal:AbortSignal.timeout(10000)});
+    const d = await r.json();
+    if(!d || d.s==='no_data' || !d.c?.length) return null;
+    return { closes: d.c, times: d.t, highs: d.h, lows: d.l };
+  } catch(e){ return null; }
+}
+
+function drawChart(container, data, ticker, period, ops=[]){
+  if(!data || !data.closes?.length){
+    container.innerHTML = '<div class="chart-loading">Sin datos para este período</div>';
+    return;
+  }
+
+  const closes = data.closes;
+  const times = data.times;
+  const W = 360, H = 140;
+  const pad = {top:10, right:10, bottom:20, left:8};
+  const cW = W - pad.left - pad.right;
+  const cH = H - pad.top - pad.bottom;
+
+  const minP = Math.min(...closes);
+  const maxP = Math.max(...closes);
+  const range = maxP - minP || 1;
+
+  const xScale = i => pad.left + (i / (closes.length-1)) * cW;
+  const yScale = v => pad.top + cH - ((v - minP) / range) * cH;
+
+  // Línea de precio
+  const pts = closes.map((c,i) => `${xScale(i).toFixed(1)},${yScale(c).toFixed(1)}`).join(' ');
+  const firstY = yScale(closes[0]);
+  const lastY = yScale(closes[closes.length-1]);
+  const isUp = closes[closes.length-1] >= closes[0];
+  const lineColor = isUp ? '#00d4a8' : '#ff6b6b';
+
+  // Área rellena
+  const areaPath = `M${xScale(0)},${yScale(closes[0])} ` +
+    closes.map((c,i)=>`L${xScale(i).toFixed(1)},${yScale(c).toFixed(1)}`).join(' ') +
+    ` L${xScale(closes.length-1)},${pad.top+cH} L${xScale(0)},${pad.top+cH} Z`;
+
+  // Marcadores de operaciones
+  let opsMarkers = '';
+  if(ops.length > 0 && times.length > 0){
+    const chartStart = times[0];
+    const chartEnd = times[times.length-1];
+    const totalTime = chartEnd - chartStart || 1;
+
+    ops.forEach(op => {
+      const opTs = new Date(op.fecha.split('/').reverse().join('-')).getTime()/1000;
+      if(opTs < chartStart || opTs > chartEnd) return;
+      const xi = (opTs - chartStart) / totalTime * (closes.length-1);
+      const ci = Math.max(0, Math.min(closes.length-1, Math.round(xi)));
+      const x = xScale(ci).toFixed(1);
+      const y = yScale(closes[ci]).toFixed(1);
+      const isBuy = op.tipo==='compra';
+      opsMarkers += `<circle cx="${x}" cy="${y}" r="5" fill="${isBuy?'#00d4a8':'#ff6b6b'}" stroke="var(--bg)" stroke-width="1.5"/>`;
+      opsMarkers += `<text x="${x}" y="${parseFloat(y)+(isBuy?-9:12)}" text-anchor="middle" font-size="7" fill="${isBuy?'#00d4a8':'#ff6b6b'}">${isBuy?'▲':'▼'}</text>`;
+    });
+  }
+
+  // Stats
+  const chg = closes[closes.length-1] - closes[0];
+  const chgPct = chg/closes[0]*100;
+  const high = Math.max(...closes);
+  const low = Math.min(...closes);
+
+  const tabs = Object.keys(PERIODS).map(p =>
+    `<span class="chart-tab ${p===period?'active':''}" onclick="loadChart('${ticker}','${p}')">${p}</span>`
+  ).join('');
+
+  container.innerHTML = `
+    <div class="chart-panel">
+      <div class="chart-header">
+        <div>
+          <div class="chart-ticker">${ticker}</div>
+          <div class="chart-chg ${isUp?'green':'red'}">${chgPct>=0?'+':''}${chgPct.toFixed(2)}% (${period})</div>
+        </div>
+        <div>
+          <div class="chart-price">U$S ${closes[closes.length-1].toFixed(2)}</div>
+        </div>
+      </div>
+      <div class="chart-tabs">${tabs}</div>
+      <svg class="chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="${lineColor}" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${areaPath}" fill="url(#cg)"/>
+        <polyline points="${pts}" fill="none" stroke="${lineColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        ${opsMarkers}
+      </svg>
+      <div class="chart-stats">
+        <div class="chart-stat"><div class="chart-stat-lbl">Máx</div><div class="chart-stat-val">U$S ${high.toFixed(2)}</div></div>
+        <div class="chart-stat"><div class="chart-stat-lbl">Mín</div><div class="chart-stat-val">U$S ${low.toFixed(2)}</div></div>
+        <div class="chart-stat"><div class="chart-stat-lbl">Variación</div><div class="chart-stat-val ${isUp?'green':'red'}">${chgPct>=0?'+':''}${chgPct.toFixed(2)}%</div></div>
+      </div>
+    </div>`;
+}
+
+async function loadChart(ticker, period='1M', context='market', holdingId=null){
+  _chartTicker = ticker;
+  _chartPeriod = period;
+  _chartContext = context;
+  _chartHoldingId = holdingId;
+
+  let container;
+  if(context === 'market'){
+    container = document.getElementById('chartPanel');
+    container.style.display = 'block';
+    container.innerHTML = `<div class="chart-loading"><span class="spinner"></span>&nbsp;&nbsp;cargando gráfico ${ticker}...</div>`;
+  } else {
+    container = document.getElementById('chart-' + holdingId);
+    if(!container) return;
+    container.innerHTML = `<div class="chart-loading"><span class="spinner"></span></div>`;
+  }
+
+  const data = await fetchCandles(ticker, period);
+
+  // Ops del holding para marcar en gráfico
+  const ops = context === 'holding' ? (S.ops||[]).filter(o=>o.ticker===ticker) : [];
+
+  drawChart(container, data, ticker, period, ops);
+}
+
+async function loadChartInHolding(ticker, holdingId){
+  const btn = document.querySelector(`#chart-${holdingId} + button`) || document.querySelector(`[onclick="loadChartInHolding('${ticker}','${holdingId}')"]`);
+  await loadChart(ticker, '1M', 'holding', holdingId);
+}
+
+// Abrir gráfico al tocar fila de mercado
+function openMktDetail(ticker, price){
+  window._buyTicker = ticker;
+  window._buyPrice = price;
+  loadChart(ticker, '1M', 'market');
+  document.getElementById('chartPanel').scrollIntoView({behavior:'smooth'});
+}
+
 // ══ AUTH SYSTEM ══
 const AUTH_KEY = 'inv_auth';
 let pinBuffer = '';
@@ -1384,6 +1741,38 @@ document.addEventListener('visibilitychange', () => {
 initAuth();
 
 </script>
+
+<!-- TRADE MODAL -->
+<div class="modal-overlay hidden" id="tradeModal" onclick="closeTradeModal(event)">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <div class="modal-title">Operación<span class="modal-ticker" id="modalTicker"></span></div>
+      <button class="modal-close" onclick="closeTradeModalDirect()">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab buy active" id="tabBuy" onclick="setModalTab('buy')">COMPRA</button>
+      <button class="modal-tab sell" id="tabSell" onclick="setModalTab('sell')">VENTA</button>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Fecha</label>
+      <input class="form-input" id="fFecha" type="date">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Precio U$S <span id="fPriceHint" style="color:var(--muted);font-size:9px"></span></label>
+      <input class="form-input" id="fPrecio" type="number" step="0.01" placeholder="0.00" oninput="updateTotal()">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Unidades <span id="fUnitsHint" style="color:var(--muted);font-size:9px"></span></label>
+      <input class="form-input" id="fUnidades" type="number" step="0.0001" placeholder="0.0000" oninput="updateTotal()">
+    </div>
+    <div class="form-total">
+      <span class="form-total-label">Total operación</span>
+      <span class="form-total-val" id="fTotal">U$S 0.00</span>
+    </div>
+    <div class="form-hint" id="fPnlHint" style="margin-bottom:14px;display:none"></div>
+    <button class="btn-confirm-buy" id="btnConfirm" onclick="confirmarOperacion()" disabled>CONFIRMAR</button>
+  </div>
+</div>
 </div><!-- /appContent -->
 </body>
 </html>

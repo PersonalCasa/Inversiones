@@ -39,7 +39,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 .eye-btn{background:none;border:1px solid var(--border);border-radius:7px;
   padding:5px 9px;color:var(--muted);cursor:pointer;font-size:13px;transition:all .2s}
 .eye-btn.hidden-mode{color:var(--accent);border-color:var(--accent)}
-.val-hidden{position:relative;color:transparent!important;user-select:none}.val-hidden::after{content:"● ● ● ● ● ●";position:absolute;left:0;top:50%;transform:translateY(-50%);color:var(--muted);font-size:10px;letter-spacing:2px;white-space:nowrap}
+.val-hidden{position:relative;color:transparent!important;user-select:none;display:inline-flex;align-items:center;vertical-align:middle}.val-hidden::after{content:"••••••";color:var(--muted);font-size:14px;letter-spacing:1px;line-height:1;position:absolute;left:0;right:0;text-align:center}
 .dots-val{letter-spacing:2px;color:var(--muted)}
 
 .page{display:none;padding:14px 14px 8px;animation:fu .25s ease}
@@ -347,6 +347,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <div class="total-amt"><span class="cur">U$S </span><span id="patTotal" class="val-mask">—</span></div>
   </div>
   <div class="card" id="patDetalle"></div>
+  <div class="sec" style="margin-top:20px">Sincronización</div>
+  <div class="card">
+    <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.6">Guardá tus datos en GitHub para no perderlos si borrás caché o cambiás de celular.</div>
+    <button class="btn btn-s" style="width:100%" onclick="setupGistSync()">⟳ Configurar sincronización</button>
+  </div>
 </div>
 
 
@@ -529,7 +534,7 @@ function renderHoldings(){
       </div>
       <div class="hdet" id="hd-${h.id}">
         <div class="dgrid">
-          <div><div class="dl">Precio compra</div><div class="dv val-mask">U$S ${h.buyPrice.toFixed(2)}</div></div>
+          <div><div class="dl">Precio promedio</div><div class="dv val-mask">U$S ${h.buyPrice.toFixed(2)}</div></div>
           <div><div class="dl">Precio actual</div><div class="dv val-mask">U$S ${h.currentPrice.toFixed(2)}</div></div>
           <div><div class="dl">Ganancia U$S</div><div class="dv val-mask ${gc}">${gain>=0?'+':''}${gain.toFixed(2)}</div></div>
           <div><div class="dl">Ganancia %</div><div class="dv ${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}%</div></div>
@@ -537,7 +542,8 @@ function renderHoldings(){
         <div class="irow"><span class="ilbl">Precio actual</span><input class="inp" id="ip-${h.id}" type="number" step="0.01" value="${h.currentPrice.toFixed(2)}"></div>
         <div class="irow"><span class="ilbl">Unidades</span><input class="inp" id="iu-${h.id}" type="number" step="0.000001" value="${h.units}"></div>
         <button class="btn btn-s" onclick="saveH(${h.id})">guardar</button>
-        <button class="btn btn-d" onclick="delH(${h.id})">eliminar</button>
+        <button class="btn" style="width:100%;margin-top:3px;background:rgba(255,107,107,0.12);color:var(--accent3);border:1px solid rgba(255,107,107,0.25)" onclick="venderDesdeHolding('${h.ticker}')">− vender</button>
+        <button class="btn btn-d" onclick="delH(${h.id})">eliminar posición</button>
       </div>`;
     list.appendChild(el);
   });
@@ -835,6 +841,8 @@ function init(){
       d.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})+'<br>'+
       d.toLocaleDateString('es-UY',{day:'2-digit',month:'short'});
   }
+  // Intentar cargar desde Gist si está configurado
+  loadFromGist().then(loaded => { if(loaded){ renderHoldings(); renderOps(); renderActivos(); } });
   setTimeout(refreshAll,800);
   renderOps();
   applyValuesState();
@@ -863,17 +871,67 @@ function registrarCompra(){
   S.ops = S.ops || [];
   S.ops.unshift(op);
 
-  // Actualizar o crear holding
+  // Precio promedio ponderado
   const existing = S.holdings.find(h=>h.ticker===op.ticker);
   if(existing){
     const totalUnits = existing.units + op.units;
-    existing.buyPrice = (existing.buyPrice*existing.units + op.precio*op.units) / totalUnits;
+    existing.buyPrice = Math.round(((existing.buyPrice*existing.units + op.precio*op.units) / totalUnits)*10000)/10000;
     existing.units = totalUnits;
   } else {
     S.holdings.push({id:Date.now()+1,ticker:op.ticker,name:'',units:op.units,buyPrice:op.precio,currentPrice:op.precio,dayChange:0,prevClose:op.precio});
   }
   save(); renderOps(); renderHoldings();
   alert(`Compra registrada: ${op.units} ${op.ticker} a U$S ${op.precio}`);
+}
+
+function venderDesdeHolding(ticker){
+  const holding = S.holdings.find(h=>h.ticker===ticker);
+  if(!holding){ alert('No encontrado'); return; }
+  const fecha = new Date().toLocaleDateString('es-UY');
+  const precio = parseFloat(prompt(`Precio de venta U$S (actual: ${holding.currentPrice.toFixed(2)}):`));
+  if(isNaN(precio)) return;
+  const units = parseFloat(prompt(`Unidades a vender (tenés ${holding.units.toFixed(4)}):`));
+  if(isNaN(units)||units>holding.units){ alert('Unidades inválidas'); return; }
+  const pnl = (precio - holding.buyPrice) * units;
+  const pnlPct = ((precio - holding.buyPrice)/holding.buyPrice*100);
+  const total = precio * units;
+  const op = { id:Date.now(), tipo:'venta', ticker, fecha, precio, units, total, pnl, pnlPct, buyPrice:holding.buyPrice, comision:total*0.01 };
+  S.ops = S.ops||[]; S.ops.unshift(op);
+  holding.units -= units;
+  if(holding.units <= 0.0001){
+    S.closed = S.closed||[];
+    S.closed.unshift({ ticker:holding.ticker, name:holding.name, fechaVenta:fecha, buyPrice:holding.buyPrice, sellPrice:precio, units, pnl, pnlPct });
+    S.holdings = S.holdings.filter(h=>h.ticker!==ticker);
+  }
+  save(); renderOps(); renderHoldings();
+  alert(`Venta: ${units} ${ticker} a U$S ${precio}\nP&L: ${pnl>=0?'+':''}U$S ${pnl.toFixed(2)} (${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%)`);
+}
+
+function comprarDesdeMercado(ticker, precioActual){
+  const fecha = new Date().toLocaleDateString('es-UY');
+  const precio = parseFloat(prompt(`Precio de compra U$S (actual: ${precioActual}):`)||precioActual);
+  if(isNaN(precio)) return;
+  const units = parseFloat(prompt('Unidades a comprar:')); if(isNaN(units)) return;
+  const total = precio * units;
+  const comision = parseFloat(prompt(`Comisión U$S (est: ${(total*0.02+0.99).toFixed(2)}):`)||(total*0.02+0.99).toFixed(2));
+  const op = { id:Date.now(), tipo:'compra', ticker:ticker.toUpperCase(), fecha, precio, units, total, comision:isNaN(comision)?0:comision };
+  S.ops = S.ops||[]; S.ops.unshift(op);
+  // Precio promedio ponderado
+  const existing = S.holdings.find(h=>h.ticker===ticker.toUpperCase());
+  if(existing){
+    const totalUnits = existing.units + units;
+    existing.buyPrice = (existing.buyPrice*existing.units + precio*units) / totalUnits;
+    existing.units = totalUnits;
+  } else {
+    S.holdings.push({id:Date.now()+1,ticker:ticker.toUpperCase(),name:'',units,buyPrice:precio,currentPrice:precio,dayChange:0,prevClose:precio});
+  }
+  save(); renderHoldings(); renderOps();
+  // Ir a portfolio
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-portfolio').classList.add('active');
+  document.querySelector('.nav-btn').classList.add('active');
+  alert(`Compra registrada: ${units} ${ticker} a U$S ${precio}`);
 }
 
 function registrarVenta(){
@@ -973,6 +1031,68 @@ function renderOps(){
         </div>
       </div>`).join('');
   }
+}
+
+
+// ══ GITHUB SYNC ══
+// Guarda los datos en un Gist de GitHub para no perderlos si se borra caché
+const GIST_KEY = 'inv_gist_config';
+
+function getGistConfig(){ return JSON.parse(localStorage.getItem(GIST_KEY)||'null'); }
+
+async function syncToGist(){
+  const config = getGistConfig();
+  if(!config?.token || !config?.gistId) return;
+  try {
+    await fetch(`https://api.github.com/gists/${config.gistId}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ files: { 'inversiones-data.json': { content: JSON.stringify(S) } } })
+    });
+  } catch(e){ console.log('Sync error:', e.message); }
+}
+
+async function loadFromGist(){
+  const config = getGistConfig();
+  if(!config?.token || !config?.gistId) return false;
+  try {
+    const r = await fetch(`https://api.github.com/gists/${config.gistId}`, {
+      headers: { 'Authorization': `token ${config.token}` }
+    });
+    const d = await r.json();
+    const raw = d?.files?.['inversiones-data.json']?.content;
+    if(raw){
+      const parsed = JSON.parse(raw);
+      S = {...def(), ...parsed};
+      save();
+      return true;
+    }
+  } catch(e){ console.log('Load error:', e.message); }
+  return false;
+}
+
+async function setupGistSync(){
+  const existing = getGistConfig();
+  if(existing){
+    const reset = confirm('Ya tenés sincronización configurada. ¿Querés reconfigurarla?');
+    if(!reset) return;
+  }
+  alert('Para sincronizar necesitás:\n1. Ir a github.com → Settings → Developer settings → Personal access tokens\n2. Generar un token con permiso "gist"\n3. Crear un Gist vacío en gist.github.com');
+  const token = prompt('Pegá tu GitHub Personal Access Token:');
+  if(!token) return;
+  const gistId = prompt('Pegá el ID de tu Gist (los caracteres después de gist.github.com/usuario/):');
+  if(!gistId) return;
+  localStorage.setItem(GIST_KEY, JSON.stringify({token, gistId}));
+  await syncToGist();
+  alert('✅ Sincronización configurada. Tus datos se guardarán automáticamente.');
+}
+
+// Override save() para incluir sync
+const _originalSave = save;
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(S));
+  // Sync en background sin bloquear
+  syncToGist().catch(()=>{});
 }
 
 // ══ AUTH SYSTEM ══

@@ -55,9 +55,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;
   font-size:8px;letter-spacing:1px;text-transform:uppercase;transition:color .2s}
 .nav-btn.active{color:var(--accent)}
-.nav-center{position:relative;margin-top:-12px;background:var(--bg2);
-  border:2px solid var(--accent);border-radius:14px;padding:10px 14px 8px;
-  box-shadow:0 0 16px rgba(0,212,168,0.2)}
+.nav-center{position:relative;margin-top:-8px;background:var(--bg2);
+  border:2px solid var(--accent);border-radius:10px;padding:6px 10px 5px;
+  box-shadow:0 0 10px rgba(0,212,168,0.15)}
 .nav-center.active{color:var(--accent)}
 .nav-btn svg{width:20px;height:20px}
 
@@ -492,7 +492,7 @@ function goTo(page,btn){
   btn.classList.add('active'); curPage=page;
   if(page==='mercado') renderMkt('todas');
   if(page==='patrimonio') renderPatrimonio();
-  if(page==='operaciones') renderOps();
+  if(page==='operaciones'){ renderOps(); setTimeout(applyValuesState,80); }
 }
 
 // FINNHUB FETCH
@@ -951,7 +951,7 @@ function registrarCompra(){
   const existing = S.holdings.find(h=>h.ticker===op.ticker);
   if(existing){
     const totalUnits = existing.units + op.units;
-    existing.buyPrice = Math.round(((existing.buyPrice*existing.units + op.precio*op.units) / totalUnits)*10000)/10000;
+    existing.buyPrice = Math.round(((existing.buyPrice*existing.units + op.precio*op.units) / totalUnits)*100)/100;
     existing.units = totalUnits;
   } else {
     S.holdings.push({id:Date.now()+1,ticker:op.ticker,name:'',units:op.units,buyPrice:op.precio,currentPrice:op.precio,dayChange:0,prevClose:op.precio});
@@ -1109,6 +1109,7 @@ function renderOps(){
     }).join('');
   }
 
+  setTimeout(applyValuesState, 50);
   // Posiciones cerradas
   const closed = document.getElementById('closedList');
   if(!closed) return;
@@ -1285,7 +1286,7 @@ function confirmarOperacion(){
     const existing = S.holdings.find(h=>h.ticker===_modalTicker);
     if(existing){
       const totalUnits = existing.units + units;
-      existing.buyPrice = Math.round(((existing.buyPrice*existing.units + precio*units)/totalUnits)*10000)/10000;
+      existing.buyPrice = Math.round(((existing.buyPrice*existing.units + precio*units)/totalUnits)*100)/100;
       existing.units = totalUnits;
     } else {
       S.holdings.push({id:Date.now()+1,ticker:_modalTicker,name:'',units,buyPrice:precio,currentPrice:_modalPrice||precio,dayChange:0,prevClose:precio});

@@ -899,13 +899,11 @@ function init(){
       d.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})+'<br>'+
       d.toLocaleDateString('es-UY',{day:'2-digit',month:'short'});
   }
-  // Cargar desde Gist (nube) — tiene prioridad sobre localStorage
+  // Cargar desde Gist al inicio
   loadFromGist().then(loaded => {
     if(loaded){
       renderHoldings(); renderOps(); renderActivos();
-      console.log("✅ Datos cargados desde Gist");
-    } else {
-      console.log("ℹ️ Usando datos locales");
+      console.log('✅ Datos cargados desde Gist');
     }
   });
   setTimeout(refreshAll,800);
@@ -1121,8 +1119,11 @@ function renderOps(){
 
 
 // ══ GITHUB SYNC ══
+// Sincronización con GitHub Gist
 const GIST_ID = '8790aabf7e2ded0147c4eed3d8cf9fee';
-const GIST_TOKEN = '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';
+const GIST_TOKEN = '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';
+function getGistToken(){ return GIST_TOKEN; }
+function setGistToken(t){}
 let _syncTimeout = null;
 let _syncStatus = 'idle'; // idle | syncing | ok | error
 
@@ -1133,7 +1134,7 @@ async function syncToGist(){
   try {
     const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
       method: 'PATCH',
-      headers: { 'Authorization': `token ${GIST_TOKEN}`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `token ${getGistToken()}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ files: { 'inversiones-data.json': { content: JSON.stringify(S) } } })
     });
     _syncStatus = r.ok ? 'ok' : 'error';
@@ -1159,7 +1160,7 @@ async function loadFromGist(){
   if(!GIST_ID || !GIST_TOKEN) return false;
   try {
     const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-      headers: { 'Authorization': `token ${GIST_TOKEN}` }
+      headers: { 'Authorization': `token ${getGistToken()}` }
     });
     const d = await r.json();
     const raw = d?.files?.['inversiones-data.json']?.content;
@@ -1183,7 +1184,8 @@ function save(){
 }
 
 async function setupGistSync(){
-  alert('Sincronización ya configurada con tu Gist personal.');
+  await syncToGist();
+  alert(_syncStatus==='ok' ? '✅ Datos sincronizados correctamente.' : '❌ Error de sincronización.');
 }
 
 

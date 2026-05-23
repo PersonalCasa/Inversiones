@@ -339,6 +339,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
         <circle cx="12" cy="12" r="3"/>
       </svg>
     </button>
+    <span id="syncIndicator" style="font-size:12px;color:var(--muted);cursor:pointer" title="Estado de sincronización" onclick="syncToGist()">☁</span>
     <div class="upd" id="lastUpd">—</div>
     <button class="refresh-btn" onclick="refreshAll()" title="Actualizar">⟳</button>
   </div>
@@ -399,7 +400,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   <div class="sec" style="margin-top:20px">Sincronización</div>
   <div class="card">
     <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.6">Guardá tus datos en GitHub para no perderlos si borrás caché o cambiás de celular.</div>
-    <button class="btn btn-s" style="width:100%" onclick="setupGistSync()">⟳ Configurar sincronización</button>
+    <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:var(--accent)">✓ Sincronización activa</span><span id="syncIndicator2" style="font-size:10px;color:var(--muted)">☁ al día</span></div>
+    <button class="btn" style="width:100%;margin-top:8px;background:transparent;border:1px solid var(--border);color:var(--muted);padding:8px" onclick="syncToGist().then(()=>alert('✅ Datos sincronizados con GitHub'))">Sincronizar ahora</button>
   </div>
 </div>
 
@@ -897,8 +899,15 @@ function init(){
       d.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})+'<br>'+
       d.toLocaleDateString('es-UY',{day:'2-digit',month:'short'});
   }
-  // Intentar cargar desde Gist si está configurado
-  loadFromGist().then(loaded => { if(loaded){ renderHoldings(); renderOps(); renderActivos(); } });
+  // Cargar desde Gist (nube) — tiene prioridad sobre localStorage
+  loadFromGist().then(loaded => {
+    if(loaded){
+      renderHoldings(); renderOps(); renderActivos();
+      console.log("✅ Datos cargados desde Gist");
+    } else {
+      console.log("ℹ️ Usando datos locales");
+    }
+  });
   setTimeout(refreshAll,800);
   renderOps();
   applyValuesState();
@@ -1112,64 +1121,69 @@ function renderOps(){
 
 
 // ══ GITHUB SYNC ══
-// Guarda los datos en un Gist de GitHub para no perderlos si se borra caché
-const GIST_KEY = 'inv_gist_config';
-
-function getGistConfig(){ return JSON.parse(localStorage.getItem(GIST_KEY)||'null'); }
+const GIST_ID = '8790aabf7e2ded0147c4eed3d8cf9fee';
+const GIST_TOKEN = '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';
+let _syncTimeout = null;
+let _syncStatus = 'idle'; // idle | syncing | ok | error
 
 async function syncToGist(){
-  const config = getGistConfig();
-  if(!config?.token || !config?.gistId) return;
+  if(!GIST_ID || !GIST_TOKEN) return;
+  _syncStatus = 'syncing';
+  updateSyncIndicator();
   try {
-    await fetch(`https://api.github.com/gists/${config.gistId}`, {
+    const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
       method: 'PATCH',
-      headers: { 'Authorization': `token ${config.token}`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `token ${GIST_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ files: { 'inversiones-data.json': { content: JSON.stringify(S) } } })
     });
-  } catch(e){ console.log('Sync error:', e.message); }
+    _syncStatus = r.ok ? 'ok' : 'error';
+  } catch(e){
+    _syncStatus = 'error';
+    console.log('Sync error:', e.message);
+  }
+  updateSyncIndicator();
+  // Resetear a idle después de 3 segundos
+  setTimeout(()=>{ _syncStatus='idle'; updateSyncIndicator(); }, 3000);
+}
+
+function updateSyncIndicator(){
+  const el = document.getElementById('syncIndicator');
+  if(!el) return;
+  const icons = { idle:'☁', syncing:'↑', ok:'✓', error:'!' };
+  const colors = { idle:'var(--muted)', syncing:'var(--accent2)', ok:'var(--accent)', error:'var(--accent3)' };
+  el.textContent = icons[_syncStatus];
+  el.style.color = colors[_syncStatus];
 }
 
 async function loadFromGist(){
-  const config = getGistConfig();
-  if(!config?.token || !config?.gistId) return false;
+  if(!GIST_ID || !GIST_TOKEN) return false;
   try {
-    const r = await fetch(`https://api.github.com/gists/${config.gistId}`, {
-      headers: { 'Authorization': `token ${config.token}` }
+    const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      headers: { 'Authorization': `token ${GIST_TOKEN}` }
     });
     const d = await r.json();
     const raw = d?.files?.['inversiones-data.json']?.content;
-    if(raw){
+    if(raw && raw !== '{}'  && raw !== '{}'){
       const parsed = JSON.parse(raw);
-      S = {...def(), ...parsed};
-      save();
-      return true;
+      if(parsed && Object.keys(parsed).length > 1){
+        S = {...def(), ...parsed};
+        localStorage.setItem(KEY, JSON.stringify(S));
+        return true;
+      }
     }
   } catch(e){ console.log('Load error:', e.message); }
   return false;
 }
 
-async function setupGistSync(){
-  const existing = getGistConfig();
-  if(existing){
-    const reset = confirm('Ya tenés sincronización configurada. ¿Querés reconfigurarla?');
-    if(!reset) return;
-  }
-  alert('Para sincronizar necesitás:\n1. Ir a github.com → Settings → Developer settings → Personal access tokens\n2. Generar un token con permiso "gist"\n3. Crear un Gist vacío en gist.github.com');
-  const token = prompt('Pegá tu GitHub Personal Access Token:');
-  if(!token) return;
-  const gistId = prompt('Pegá el ID de tu Gist (los caracteres después de gist.github.com/usuario/):');
-  if(!gistId) return;
-  localStorage.setItem(GIST_KEY, JSON.stringify({token, gistId}));
-  await syncToGist();
-  alert('✅ Sincronización configurada. Tus datos se guardarán automáticamente.');
-}
-
-// Override save() para incluir sync
-const _originalSave = save;
+// Sync con debounce — espera 2 segundos después del último cambio
 function save(){
   localStorage.setItem(KEY, JSON.stringify(S));
-  // Sync en background sin bloquear
-  syncToGist().catch(()=>{});
+  if(_syncTimeout) clearTimeout(_syncTimeout);
+  _syncTimeout = setTimeout(syncToGist, 2000);
+}
+
+async function setupGistSync(){
+  alert('Sincronización ya configurada con tu Gist personal.');
 }
 
 

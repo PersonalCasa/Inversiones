@@ -1662,9 +1662,9 @@ function checkAlertNotifications(){
     });
   });
 
-  // ── MERCADO GENERAL (todos los instrumentos de la lista) ──
+  // ── MERCADO GENERAL (todos los instrumentos de MKT_LIST + seguidos) ──
   // Alerta si cualquier instrumento sube o baja 1%
-  const MKT_ALL = ['SPY','QQQ','URTH','IWM','GLD','NVDA','AAPL','MSFT','AMZN','GOOG','META','TSLA','AMD','BTC-USD','ETH-USD','SOL-USD','NU','JPM'];
+  const MKT_ALL = [...new Set([...MKT_LIST.map(x=>x.t), ...(S.seguidos||[])])];
   MKT_ALL.forEach(ticker => {
     const data = S.cache?.[ticker];
     if(!data) return;

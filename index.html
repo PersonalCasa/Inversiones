@@ -55,8 +55,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;
   font-size:8px;letter-spacing:1px;text-transform:uppercase;transition:color .2s}
 .nav-btn.active{color:var(--accent)}
-.nav-center{position:relative;margin-top:-8px;background:var(--bg2);
-  border:2px solid var(--accent);border-radius:10px;padding:6px 10px 5px;
+.nav-center{position:relative;background:var(--bg2);
+  border:2px solid var(--accent);border-radius:10px;
   box-shadow:0 0 10px rgba(0,212,168,0.15)}
 .nav-center.active{color:var(--accent)}
 .nav-btn svg{width:20px;height:20px}
@@ -1630,15 +1630,71 @@ async function requestNotifications(){
 
 function checkAlertNotifications(){
   if(Notification.permission !== 'granted') return;
-  const threshold = parseFloat(localStorage.getItem('inv_alert_pct') || '-3');
+  const alerted = JSON.parse(sessionStorage.getItem('inv_alerted')||'{}');
+
+  // ── POSICIONES PROPIAS ──
+  // Caídas: -1%, -3%, -5%, -10%
+  // Subidas: +3%, +5%, +10%
   S.holdings.forEach(h => {
-    if((h.dayChange||0) <= threshold){
-      new Notification(`⚠️ ${h.ticker} cayó ${h.dayChange.toFixed(2)}% hoy`, {
-        body: `Valor actual: U$S ${h.currentPrice.toFixed(2)}`,
+    const chg = h.dayChange||0;
+    const val = (h.units*h.currentPrice).toFixed(2);
+    const precio = h.currentPrice.toFixed(2);
+
+    // Niveles de alerta — cada nivel tiene su propia key
+    const niveles = [
+      { key:`${h.ticker}_d10`, cond: chg <= -10, msg: `🔴 ${h.ticker} cayó ${chg.toFixed(2)}% hoy` },
+      { key:`${h.ticker}_d5`,  cond: chg <= -5 && chg > -10, msg: `🟠 ${h.ticker} cayó ${chg.toFixed(2)}% hoy` },
+      { key:`${h.ticker}_d3`,  cond: chg <= -3 && chg > -5,  msg: `⚠️ ${h.ticker} cayó ${chg.toFixed(2)}% hoy` },
+      { key:`${h.ticker}_d1`,  cond: chg <= -1 && chg > -3,  msg: `📊 ${h.ticker} bajó ${Math.abs(chg).toFixed(2)}% hoy` },
+      { key:`${h.ticker}_u3`,  cond: chg >= 3 && chg < 5,    msg: `📈 ${h.ticker} subió ${chg.toFixed(2)}% hoy` },
+      { key:`${h.ticker}_u5`,  cond: chg >= 5 && chg < 10,   msg: `🟢 ${h.ticker} subió ${chg.toFixed(2)}% hoy` },
+      { key:`${h.ticker}_u10`, cond: chg >= 10,               msg: `🚀 ${h.ticker} subió ${chg.toFixed(2)}% hoy` },
+    ];
+
+    niveles.forEach(n => {
+      if(n.cond && !alerted[n.key]){
+        new Notification(n.msg, {
+          body: `Precio: U$S ${precio} · Posición: U$S ${val}`,
+          icon: './icon-192.png'
+        });
+        alerted[n.key] = true;
+      }
+    });
+  });
+
+  // ── MERCADO GENERAL (todos los instrumentos de la lista) ──
+  // Alerta si cualquier instrumento sube o baja 1%
+  const MKT_ALL = ['SPY','QQQ','URTH','IWM','GLD','NVDA','AAPL','MSFT','AMZN','GOOG','META','TSLA','AMD','BTC-USD','ETH-USD','SOL-USD','NU','JPM'];
+  MKT_ALL.forEach(ticker => {
+    const data = S.cache?.[ticker];
+    if(!data) return;
+    const chg = data.dayChange||0;
+    const key = `mkt_${ticker}_1`;
+    if(!alerted[key] && Math.abs(chg) >= 1){
+      new Notification(`${chg>=0?'📈':'📉'} ${ticker} ${chg>=0?'subió':'bajó'} ${Math.abs(chg).toFixed(2)}% hoy`, {
+        body: `Precio: U$S ${data.price?.toFixed(2)||'—'}`,
         icon: './icon-192.png'
       });
+      alerted[key] = true;
     }
   });
+
+  // ── SEGUIDOS — alerta específica si suben o bajan 2% ──
+  (S.seguidos||[]).forEach(ticker => {
+    const data = S.cache?.[ticker];
+    if(!data) return;
+    const chg = data.dayChange||0;
+    const key = `seg_${ticker}_2`;
+    if(!alerted[key] && Math.abs(chg) >= 2){
+      new Notification(`⭐ ${ticker} (seguido) ${chg>=0?'subió':'bajó'} ${Math.abs(chg).toFixed(2)}% hoy`, {
+        body: `Precio: U$S ${data.price?.toFixed(2)||'—'}`,
+        icon: './icon-192.png'
+      });
+      alerted[key] = true;
+    }
+  });
+
+  sessionStorage.setItem('inv_alerted', JSON.stringify(alerted));
 }
 
 // ── BENCHMARK VS SPY ──

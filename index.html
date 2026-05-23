@@ -167,6 +167,24 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 .pat-row:last-child{border-bottom:none}
 .pdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
 
+.op-row{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 12px;background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;margin-bottom:6px}
+.op-type{font-size:9px;text-transform:uppercase;letter-spacing:1px;padding:2px 7px;
+  border-radius:4px;margin-right:8px}
+.op-type.buy{background:rgba(0,212,168,0.1);color:var(--accent)}
+.op-type.sell{background:rgba(255,107,107,0.1);color:var(--accent3)}
+.op-ticker{font-size:13px;font-weight:500}
+.op-detail{font-size:9px;color:var(--muted);margin-top:2px}
+.op-right{text-align:right}
+.op-val{font-size:13px}
+.op-pnl{font-size:10px;margin-top:2px}
+.closed-row{background:var(--surface);border:1px solid var(--border);border-radius:9px;
+  padding:12px;margin-bottom:6px}
+.closed-top{display:flex;justify-content:space-between}
+.closed-ticker{font-size:14px;font-weight:500}
+.closed-pnl{font-size:13px;text-align:right}
+.closed-detail{font-size:9px;color:var(--muted);margin-top:4px}
 .spinner{display:inline-block;width:11px;height:11px;border:2px solid var(--border);
   border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-left:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -331,6 +349,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   <div class="card" id="patDetalle"></div>
 </div>
 
+
+
+<!-- OPERACIONES -->
+<div class="page" id="page-operaciones">
+  <div class="sec" style="margin-top:4px">Operaciones</div>
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="btn btn-s" style="flex:1;padding:10px" onclick="registrarCompra()">+ Compra</button>
+    <button class="btn" style="flex:1;padding:10px;background:rgba(255,107,107,0.15);color:var(--accent3);border:1px solid rgba(255,107,107,0.3)" onclick="registrarVenta()">− Venta</button>
+  </div>
+  <div class="sec">Posiciones cerradas</div>
+  <div id="closedList"></div>
+  <div class="sec">Historial</div>
+  <div id="opsList"></div>
+</div>
+
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="goTo('portfolio',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
@@ -343,6 +376,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   <button class="nav-btn" onclick="goTo('activos',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>
     Activos
+  </button>
+  <button class="nav-btn" onclick="goTo('operaciones',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Historial
   </button>
   <button class="nav-btn" onclick="goTo('patrimonio',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><text x="12" y="19" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="bold">$</text></svg>
@@ -370,6 +407,8 @@ function def(){
     activos:[],
     seguidos:['NVDA','TSLA','AAPL','SPY','QQQ','MSFT','AMZN','GOOG','BTC-USD','ETH-USD'],
     cache:{},
+    ops:[],
+    closed:[],
     lastUpdate:null
   };
 }
@@ -385,6 +424,7 @@ function goTo(page,btn){
   btn.classList.add('active'); curPage=page;
   if(page==='mercado') renderMkt('todas');
   if(page==='patrimonio') renderPatrimonio();
+  if(page==='operaciones') renderOps();
 }
 
 // FINNHUB FETCH
@@ -503,14 +543,15 @@ function renderHoldings(){
   });
 
   const tGain=tVal-tInv, tGainPct=tInv>0?(tGain/tInv*100):0;
+  const tDayPct=tVal>0?(tDay/(tVal-tDay)*100):0;
   document.getElementById('tVal').textContent=tVal.toFixed(2);
   document.getElementById('tInv').textContent='U$S '+tInv.toFixed(0);
   const ge=document.getElementById('tGain');
-  ge.textContent=(tGain>=0?'+':'')+'U$S '+tGain.toFixed(2)+' ('+(tGainPct>=0?'+':'')+tGainPct.toFixed(2)+'%)';
   ge.className='mv '+(tGain>=0?'green':'red');
+  ge.innerHTML=`<span class="val-mask">${tGain>=0?'+':''}U$S ${tGain.toFixed(2)}</span>&nbsp;<span style="font-size:10px">${tGainPct>=0?'+':''}${tGainPct.toFixed(2)}%</span>`;
   const de=document.getElementById('tDay');
-  de.textContent=(tDay>=0?'+':'')+'U$S '+tDay.toFixed(2);
   de.className='mv '+(tDay>=0?'green':'red');
+  de.innerHTML=`<span class="val-mask">${tDay>=0?'+':''}U$S ${tDay.toFixed(2)}</span>&nbsp;<span style="font-size:10px">${tDayPct>=0?'+':''}${tDayPct.toFixed(2)}%</span>`;
   renderAlloc(tVal);
   setTimeout(applyValuesState,50);
 }
@@ -795,9 +836,145 @@ function init(){
       d.toLocaleDateString('es-UY',{day:'2-digit',month:'short'});
   }
   setTimeout(refreshAll,800);
+  renderOps();
   applyValuesState();
   if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
+
+// ══ OPERACIONES ══
+function registrarCompra(){
+  const t = prompt('Ticker (ej: SPY, NVDA):'); if(!t) return;
+  const fecha = prompt('Fecha (ej: 22/05/2026):')||new Date().toLocaleDateString('es-UY');
+  const precio = parseFloat(prompt('Precio de compra U$S:')); if(isNaN(precio)) return;
+  const units = parseFloat(prompt('Unidades:')); if(isNaN(units)) return;
+  const total = precio * units;
+  const comision = parseFloat(prompt(`Comisión U$S (estimada: ${(total*0.02+0.99).toFixed(2)}):`)||((total*0.02+0.99).toFixed(2)));
+
+  const op = {
+    id: Date.now(),
+    tipo: 'compra',
+    ticker: t.toUpperCase(),
+    fecha,
+    precio,
+    units,
+    total,
+    comision: isNaN(comision)?0:comision
+  };
+  S.ops = S.ops || [];
+  S.ops.unshift(op);
+
+  // Actualizar o crear holding
+  const existing = S.holdings.find(h=>h.ticker===op.ticker);
+  if(existing){
+    const totalUnits = existing.units + op.units;
+    existing.buyPrice = (existing.buyPrice*existing.units + op.precio*op.units) / totalUnits;
+    existing.units = totalUnits;
+  } else {
+    S.holdings.push({id:Date.now()+1,ticker:op.ticker,name:'',units:op.units,buyPrice:op.precio,currentPrice:op.precio,dayChange:0,prevClose:op.precio});
+  }
+  save(); renderOps(); renderHoldings();
+  alert(`Compra registrada: ${op.units} ${op.ticker} a U$S ${op.precio}`);
+}
+
+function registrarVenta(){
+  const tickers = S.holdings.map(h=>h.ticker).join(', ');
+  const t = prompt(`¿Qué vendés? (${tickers}):`); if(!t) return;
+  const holding = S.holdings.find(h=>h.ticker===t.toUpperCase());
+  if(!holding){ alert('No tenés esa posición'); return; }
+
+  const fecha = prompt('Fecha:')||new Date().toLocaleDateString('es-UY');
+  const precio = parseFloat(prompt(`Precio de venta U$S (actual: ${holding.currentPrice.toFixed(2)}):`));
+  if(isNaN(precio)) return;
+  const units = parseFloat(prompt(`Unidades a vender (tenés ${holding.units.toFixed(4)}):`));
+  if(isNaN(units)||units>holding.units){ alert('Unidades inválidas'); return; }
+
+  const pnl = (precio - holding.buyPrice) * units;
+  const pnlPct = ((precio - holding.buyPrice)/holding.buyPrice*100);
+  const total = precio * units;
+
+  const op = {
+    id: Date.now(),
+    tipo: 'venta',
+    ticker: t.toUpperCase(),
+    fecha,
+    precio,
+    units,
+    total,
+    pnl,
+    pnlPct,
+    buyPrice: holding.buyPrice,
+    comision: total * 0.01
+  };
+  S.ops = S.ops || [];
+  S.ops.unshift(op);
+
+  // Actualizar holding
+  holding.units -= units;
+  if(holding.units <= 0.0001){
+    // Posición cerrada
+    S.closed = S.closed || [];
+    S.closed.unshift({
+      ticker: holding.ticker,
+      name: holding.name,
+      fechaCompra: '—',
+      fechaVenta: fecha,
+      buyPrice: holding.buyPrice,
+      sellPrice: precio,
+      units,
+      pnl,
+      pnlPct
+    });
+    S.holdings = S.holdings.filter(h=>h.ticker!==t.toUpperCase());
+  }
+  save(); renderOps(); renderHoldings();
+  alert(`Venta registrada. P&L: ${pnl>=0?'+':''}U$S ${pnl.toFixed(2)} (${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%)`);
+}
+
+function renderOps(){
+  // Historial
+  const list = document.getElementById('opsList');
+  if(!list) return;
+  const ops = S.ops || [];
+  if(!ops.length){
+    list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:10px;padding:20px">Sin operaciones registradas</div>';
+  } else {
+    list.innerHTML = ops.map(op=>{
+      const isBuy = op.tipo==='compra';
+      const pnlStr = op.pnl!=null ? `<span class="${op.pnl>=0?'green':'red'}">${op.pnl>=0?'+':''}U$S ${op.pnl.toFixed(2)} (${op.pnlPct>=0?'+':''}${op.pnlPct.toFixed(1)}%)</span>` : '';
+      return `<div class="op-row">
+        <div>
+          <div><span class="op-type ${isBuy?'buy':'sell'}">${isBuy?'COMPRA':'VENTA'}</span><span class="op-ticker">${op.ticker}</span></div>
+          <div class="op-detail">${op.fecha} · ${op.units.toFixed(4)} u. · U$S ${op.precio.toFixed(2)}</div>
+        </div>
+        <div class="op-right">
+          <div class="op-val val-mask">${isBuy?'-':'+'} U$S ${op.total.toFixed(2)}</div>
+          <div class="op-pnl">${pnlStr}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Posiciones cerradas
+  const closed = document.getElementById('closedList');
+  if(!closed) return;
+  const cls = S.closed || [];
+  if(!cls.length){
+    closed.innerHTML='<div style="text-align:center;color:var(--muted);font-size:10px;padding:16px">Sin posiciones cerradas</div>';
+  } else {
+    closed.innerHTML = cls.map(c=>`
+      <div class="closed-row">
+        <div class="closed-top">
+          <div class="closed-ticker">${c.ticker}</div>
+          <div class="closed-pnl ${c.pnl>=0?'green':'red'} val-mask">${c.pnl>=0?'+':''}U$S ${c.pnl.toFixed(2)}</div>
+        </div>
+        <div class="closed-detail">
+          Compra U$S ${c.buyPrice.toFixed(2)} → Venta U$S ${c.sellPrice.toFixed(2)} · ${c.units.toFixed(4)} u. · 
+          <span class="${c.pnlPct>=0?'green':'red'}">${c.pnlPct>=0?'+':''}${c.pnlPct.toFixed(2)}%</span>
+        </div>
+      </div>`).join('');
+  }
+}
+
 // ══ AUTH SYSTEM ══
 const AUTH_KEY = 'inv_auth';
 let pinBuffer = '';

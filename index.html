@@ -39,7 +39,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 .eye-btn{background:none;border:1px solid var(--border);border-radius:7px;
   padding:5px 9px;color:var(--muted);cursor:pointer;font-size:13px;transition:all .2s}
 .eye-btn.hidden-mode{color:var(--accent);border-color:var(--accent)}
-.val-hidden{filter:blur(8px);user-select:none;pointer-events:none}
+.val-hidden{position:relative;color:transparent!important;user-select:none}.val-hidden::after{content:"● ● ● ● ● ●";position:absolute;left:0;top:50%;transform:translateY(-50%);color:var(--muted);font-size:10px;letter-spacing:2px;white-space:nowrap}
 .dots-val{letter-spacing:2px;color:var(--muted)}
 
 .page{display:none;padding:14px 14px 8px;animation:fu .25s ease}
@@ -236,13 +236,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   </div>
   <div id="authBio" style="display:none;flex-direction:column;align-items:center">
     <div class="auth-finger" onclick="triggerBiometric()">
-      <svg viewBox="0 0 50 60" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="38" height="46">
-        <ellipse cx="25" cy="22" rx="18" ry="20" stroke="currentColor" stroke-width="1.8" fill="none"/>
-        <path d="M11 22c0-7.7 6.3-14 14-14s14 6.3 14 14c0 10-5 18-14 22-9-4-14-12-14-22z"/>
-        <path d="M17 22c0-4.4 3.6-8 8-8s8 3.6 8 8c0 6-3 11-8 13-5-2-8-7-8-13z"/>
-        <path d="M21 22c0-2.2 1.8-4 4-4s4 1.8 4 4c0 3-1.5 5.5-4 7-2.5-1.5-4-4-4-7z"/>
-        <line x1="25" y1="26" x2="25" y2="50" stroke-width="1.4" opacity="0.4"/>
-      </svg>
+      <img src="./fingerprint-green.png" width="52" height="52" style="object-fit:contain;opacity:0.9">
     </div>
     <div class="auth-msg" id="bioMsg">Tocá para autenticar</div>
     <div class="auth-divider"><span>o</span></div>
@@ -312,9 +306,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <button class="search-btn" onclick="searchTicker()">IR</button>
   </div>
   <div class="mkt-tabs">
-    <button class="mtab active" onclick="showMktTab('gainers',this)">▲ Subió</button>
+    <button class="mtab active" onclick="showMktTab('todas',this)">≡ Todas</button>
+    <button class="mtab" onclick="showMktTab('gainers',this)">▲ Subió</button>
     <button class="mtab" onclick="showMktTab('losers',this)">▼ Bajó</button>
-    <button class="mtab" onclick="showMktTab('todas',this)">≡ Todas</button>
     <button class="mtab" onclick="showMktTab('seguidos',this)">★ Seguidos</button>
   </div>
   <div id="mktContent"></div>
@@ -389,7 +383,7 @@ function goTo(page,btn){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   btn.classList.add('active'); curPage=page;
-  if(page==='mercado') renderMkt('gainers');
+  if(page==='mercado') renderMkt('todas');
   if(page==='patrimonio') renderPatrimonio();
 }
 
@@ -608,7 +602,7 @@ const MKT_LIST = [
   {t:'JPM',   n:'JPMorgan Chase',       cat:'otros'},
 ];
 
-let mktTab = 'gainers';
+let mktTab = 'todas';
 
 function showMktTab(tab,el){
   document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));

@@ -1327,46 +1327,47 @@ let _chartContext = 'market'; // 'market' | 'holding'
 let _chartHoldingId = null;
 
 async function fetchCandles(ticker, period){
-  const {days} = PERIODS[period];
-
-  // Mapeo de período a intervalo de Yahoo Finance
   const yahooInterval = {
-    '1D': '5m', '1S': '60m', '1M': '1d',
-    '6M': '1d', '1A': '1wk', '5A': '1wk', '10A': '1mo'
-  }[period] || '1d';
+    '1D':'5m','1S':'60m','1M':'1d',
+    '6M':'1d','1A':'1wk','5A':'1wk','10A':'1mo'
+  }[period]||'1d';
 
   const yahooRange = {
-    '1D': '1d', '1S': '5d', '1M': '1mo',
-    '6M': '6mo', '1A': '1y', '5A': '5y', '10A': '10y'
-  }[period] || '1mo';
+    '1D':'1d','1S':'5d','1M':'1mo',
+    '6M':'6mo','1A':'1y','5A':'5y','10A':'10y'
+  }[period]||'1mo';
 
-  // Ticker de Yahoo (criptos ya vienen como BTC-USD)
-  const yahooTicker = ticker;
+  // Proxies CORS públicos — intenta cada uno
+  const proxies = [
+    `https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=${yahooInterval}&range=${yahooRange}`)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=${yahooInterval}&range=${yahooRange}`)}`,
+    `https://thingproxy.freeboard.io/fetch/https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=${yahooInterval}&range=${yahooRange}`,
+  ];
 
-  try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooTicker)}?interval=${yahooInterval}&range=${yahooRange}`;
-    const r = await fetch(url, {signal: AbortSignal.timeout(12000)});
-    const d = await r.json();
-    const result = d?.chart?.result?.[0];
-    if(!result) return null;
-    const closes = result.indicators?.quote?.[0]?.close;
-    const times = result.timestamp;
-    const highs = result.indicators?.quote?.[0]?.high;
-    const lows = result.indicators?.quote?.[0]?.low;
-    if(!closes?.length || !times?.length) return null;
-    // Filtrar nulls
-    const valid = closes.map((c,i)=>({c,t:times[i],h:highs?.[i],l:lows?.[i]})).filter(x=>x.c!=null);
-    if(!valid.length) return null;
-    return {
-      closes: valid.map(x=>x.c),
-      times: valid.map(x=>x.t),
-      highs: valid.map(x=>x.h||x.c),
-      lows: valid.map(x=>x.l||x.c)
-    };
-  } catch(e){
-    console.log('Chart error:', ticker, period, e.message);
-    return null;
+  for(const url of proxies){
+    try {
+      const r = await fetch(url, {signal: AbortSignal.timeout(10000)});
+      if(!r.ok) continue;
+      const d = await r.json();
+      const result = d?.chart?.result?.[0];
+      if(!result) continue;
+      const closes = result.indicators?.quote?.[0]?.close;
+      const times = result.timestamp;
+      const highs = result.indicators?.quote?.[0]?.high;
+      const lows = result.indicators?.quote?.[0]?.low;
+      if(!closes?.length||!times?.length) continue;
+      const valid = closes.map((c,i)=>({c,t:times[i],h:highs?.[i],l:lows?.[i]})).filter(x=>x.c!=null);
+      if(!valid.length) continue;
+      return {
+        closes: valid.map(x=>x.c),
+        times: valid.map(x=>x.t),
+        highs: valid.map(x=>x.h||x.c),
+        lows: valid.map(x=>x.l||x.c)
+      };
+    } catch(e){ continue; }
   }
+  console.log('Chart: todos los proxies fallaron para', ticker);
+  return null;
 }
 
 function drawChart(container, data, ticker, period, ops=[]){

@@ -1157,20 +1157,18 @@ function updateSyncIndicator(){
 }
 
 async function loadFromGist(){
-  if(!GIST_ID || !GIST_TOKEN) return false;
   try {
-    const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-      headers: { 'Authorization': `token ${getGistToken()}` }
-    });
-    const d = await r.json();
-    const raw = d?.files?.['inversiones-data.json']?.content;
-    if(raw && raw !== '{}'  && raw !== '{}'){
-      const parsed = JSON.parse(raw);
-      if(parsed && Object.keys(parsed).length > 1){
-        S = {...def(), ...parsed};
-        localStorage.setItem(KEY, JSON.stringify(S));
-        return true;
-      }
+    // Raw URL sin auth — evita CORS
+    const rawUrl = 'https://gist.githubusercontent.com/PersonalCasa/8790aabf7e2ded0147c4eed3d8cf9fee/raw/inversiones-data.json';
+    const r = await fetch(rawUrl + '?t=' + Date.now(), {signal: AbortSignal.timeout(8000)});
+    if(!r.ok) return false;
+    const text = await r.text();
+    if(!text || text.trim()==='{}') return false;
+    const parsed = JSON.parse(text);
+    if(parsed && Object.keys(parsed).length > 1){
+      S = {...def(), ...parsed};
+      localStorage.setItem(KEY, JSON.stringify(S));
+      return true;
     }
   } catch(e){ console.log('Load error:', e.message); }
   return false;

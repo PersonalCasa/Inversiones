@@ -618,6 +618,7 @@ function renderHoldings(){
           <div><div class="dl">Precio actual</div><div class="dv val-mask">U$S ${h.currentPrice.toFixed(2)}</div></div>
           <div><div class="dl">Ganancia U$S</div><div class="dv val-mask ${gc}">${gain>=0?'+':''}${gain.toFixed(2)}</div></div>
           <div><div class="dl">Ganancia %</div><div class="dv ${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}%</div></div>
+          <div><div class="dl">Anualizado</div><div class="dv ${gc}" id="ann-${h.id}">—</div></div>
         </div>
         <div class="irow"><span class="ilbl">Precio actual</span><input class="inp" id="ip-${h.id}" type="number" step="0.01" value="${h.currentPrice.toFixed(2)}"></div>
         <div class="irow"><span class="ilbl">Unidades</span><input class="inp" id="iu-${h.id}" type="number" step="0.000001" value="${h.units}"></div>
@@ -629,6 +630,14 @@ function renderHoldings(){
         <button class="btn btn-d" onclick="delH(${h.id})">eliminar posición</button>
       </div>`;
     list.appendChild(el);
+    // Calcular anualizado para este holding
+    const ann = calcAnualizado((val-inv)/inv*100, primerCompra(h.ticker));
+    const annEl = document.getElementById('ann-'+h.id);
+    if(annEl && ann){
+      annEl.textContent = (ann.anualizado>=0?'+':'') + ann.anualizado.toFixed(2) + '% / año (' + ann.dias + 'd)';
+    } else if(annEl) {
+      annEl.textContent = 'menos de 7 días';
+    }
   });
 
   const tGain=tVal-tInv, tGainPct=tInv>0?(tGain/tInv*100):0;
@@ -643,6 +652,19 @@ function renderHoldings(){
   de.innerHTML=`<span class="val-mask">${tDay>=0?'+':''}U$S ${tDay.toFixed(2)}</span>&nbsp;<span style="font-size:10px">${tDayPct>=0?'+':''}${tDayPct.toFixed(2)}%</span>`;
   renderAlloc(tVal);
   setTimeout(applyValuesState,50);
+
+  // Retorno anualizado global
+  const globalAnn = calcAnualizado(tGainPct, primerCompraGlobal());
+  const tAnualEl = document.getElementById('tAnual');
+  const tDiasEl = document.getElementById('tDias');
+  if(tAnualEl && globalAnn){
+    tAnualEl.textContent = (globalAnn.anualizado>=0?'+':'') + globalAnn.anualizado.toFixed(2) + '% / año';
+    tAnualEl.className = 'mv ' + (globalAnn.anualizado>=0?'green':'red');
+    if(tDiasEl) tDiasEl.textContent = globalAnn.dias + ' días';
+  } else if(tAnualEl) {
+    tAnualEl.textContent = 'registrá operaciones';
+    if(tDiasEl) tDiasEl.textContent = '—';
+  }
 }
 
 function togH(id){ document.getElementById('hd-'+id).classList.toggle('open'); }
@@ -1910,6 +1932,38 @@ function chartLeave(svg){
     const el = svg.querySelector('#'+id);
     if(el) el.style.display='none';
   });
+}
+
+
+// ── RETORNO ANUALIZADO ──
+function calcAnualizado(gainPct, fechaCompra){
+  // Calcular días desde la primera compra
+  let dias = 365; // default si no hay fecha
+  if(fechaCompra){
+    const parts = fechaCompra.split('/');
+    if(parts.length === 3){
+      const fecha = new Date(parts[2], parts[1]-1, parts[0]);
+      dias = Math.max(1, Math.round((Date.now() - fecha.getTime()) / 86400000));
+    }
+  }
+  if(dias < 7) return null; // muy poco tiempo para anualizar
+  // Fórmula: (1 + r)^(365/dias) - 1
+  const r = gainPct / 100;
+  const anualizado = (Math.pow(1 + r, 365 / dias) - 1) * 100;
+  return { anualizado, dias };
+}
+
+function primerCompra(ticker){
+  const ops = (S.ops||[]).filter(o=>o.tipo==='compra' && o.ticker===ticker);
+  if(!ops.length) return null;
+  // La más antigua está al final (están en orden inverso)
+  return ops[ops.length-1].fecha;
+}
+
+function primerCompraGlobal(){
+  const ops = (S.ops||[]).filter(o=>o.tipo==='compra');
+  if(!ops.length) return null;
+  return ops[ops.length-1].fecha;
 }
 
 // ══ AUTH SYSTEM ══

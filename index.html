@@ -377,6 +377,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   <div class="sec">Posiciones <span style="margin-left:5px"><span class="live-dot"></span> <span id="pStat" style="font-size:8px;color:var(--muted)">cargando...</span></span></div>
   <div id="holdingsList"></div>
   <button class="btn-add" onclick="addPosition()">+ agregar posición</button>
+  <button class="btn-add" onclick="debugAnn()" style="border-color:var(--gold);color:var(--gold)">🔍 debug anualizado</button>
   <div class="sec">Asignación objetivo</div>
   <div class="card" id="allocCard"></div>
   <div class="sec">Plan de compras 2026</div>
@@ -1954,6 +1955,24 @@ function chartLeave(svg){
 }
 
 
+
+// ── DEBUG ──
+function debugAnn(){
+  const ops = S.ops||[];
+  const h = S.holdings[0];
+  if(!h){ alert('Sin holdings'); return; }
+  const pc = primerCompra(h.ticker);
+  const gp = h.units>0 ? (h.currentPrice-h.buyPrice)/h.buyPrice*100 : 0;
+  const ann = calcAnualizado(gp, pc);
+  alert(
+    'Ticker: ' + h.ticker + '\n' +
+    'Ops totales: ' + ops.length + '\n' +
+    'Ops de compra URTH: ' + ops.filter(o=>o.ticker===h.ticker&&o.tipo==="compra").length + '\n' +
+    'Primera compra fecha: ' + (pc||'null') + '\n' +
+    'Ganancia%: ' + gp.toFixed(4) + '\n' +
+    'Anualizado: ' + (ann ? ann.anualizado.toFixed(2)+'% ('+ann.dias+' dias)' : 'null')
+  );
+}
 
 // ── RETORNO ANUALIZADO ──
 function calcAnualizado(gainPct, fechaStr){

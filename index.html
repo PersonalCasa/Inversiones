@@ -1019,11 +1019,11 @@ function init(){
   loadFromGist().then(loaded => {
     if(loaded){
       renderHoldings(); renderOps(); renderActivos();
-      console.log('✅ Datos cargados desde Gist');
+      renderPatrimonio();
     }
+    // Actualizar precios después de cargar datos
+    setTimeout(refreshAll, 500);
   });
-  setTimeout(refreshAll,800);
-  updateNotifBtn();
   updateNotifBtn();
   renderOps();
   applyValuesState();

@@ -1,10 +1,8 @@
-const CACHE = 'inversiones-v5';
-const ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE = 'inversiones-v7';
+const ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png', './fingerprint-green.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS))
-  );
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
   self.skipWaiting();
 });
 
@@ -18,7 +16,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network first — siempre busca version nueva, cae a cache si no hay red
   e.respondWith(
     fetch(e.request)
       .then(r => {

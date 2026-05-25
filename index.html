@@ -594,6 +594,7 @@ async function refreshAll(){
 
 // HOLDINGS
 function renderHoldings(){
+  console.log("renderHoldings called, holdings:", S.holdings?.length);
   const list = document.getElementById('holdingsList');
   list.innerHTML='';
   let tVal=0,tInv=0,tDay=0;
@@ -999,6 +1000,7 @@ function renderPatrimonio(){
 }
 
 function init(){
+  console.log("init called, S:", JSON.stringify(S).substring(0,200));
   renderHoldings(); renderPlan(); renderActivos();
   if(S.lastUpdate){
     const d=new Date(S.lastUpdate);
@@ -1007,6 +1009,7 @@ function init(){
       d.toLocaleDateString('es-UY',{day:'2-digit',month:'short'});
   }
   // Cargar desde Gist al inicio
+  console.log("Loading from gist...");
   loadFromGist().then(loaded => {
     if(loaded){
       renderHoldings(); renderOps(); renderActivos();

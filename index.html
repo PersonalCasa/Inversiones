@@ -625,6 +625,7 @@ function renderHoldings(){
         '<div>',
           '<div class="hv val-mask">U$S ' + val.toFixed(2) + '</div>',
           '<div class="hc ' + dc + '">' + dayStr + ' <span class="' + gc + '">' + (gainPct>=0?'+':'') + gainPct.toFixed(2) + '% total</span></div>',
+          '<div style="font-size:9px;color:var(--muted);margin-top:2px" id="annMain-' + h.id + '">—</div>',
         '</div>',
       '</div>',
       '<div class="hdet" id="hd-' + h.id + '">',
@@ -1975,7 +1976,8 @@ function calcAnualizado(gainPct, fechaStr){
 }
 
 function primerCompra(ticker){
-  const ops = (S.ops||[]).filter(o=>o.tipo==='compra' && o.ticker===ticker);
+  const t = (ticker||'').toUpperCase();
+  const ops = (S.ops||[]).filter(o=>o.tipo==='compra' && (o.ticker||'').toUpperCase()===t);
   if(ops.length) return ops[ops.length-1].fecha;
   return null;
 }

@@ -613,7 +613,7 @@ function renderHoldings(){
         <div><div class="ht">${h.ticker}</div><div class="hn">${h.name||''} · ${h.units.toFixed(4)} u.</div></div>
         <div>
           <div class="hv val-mask">U$S ${val.toFixed(2)}</div>
-          <div class="hc">${isWeekend ? '<span style="color:var(--muted);font-size:9px">mercado cerrado</span>' : '<span class="'+dc+'">'+(h.dayChange||0>=0?'+':'')+(h.dayChange||0).toFixed(2)+'% hoy</span>'} &nbsp;<span class="${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}% total</span></div>
+          <div class="hc ${dc}">${isWeekend?'—':((h.dayChange||0)>=0?'+':'')+(h.dayChange||0).toFixed(2)+'% hoy'} &nbsp;<span class="${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}% total</span></div>
         </div>
       </div>
       <div class="hdet" id="hd-${h.id}">

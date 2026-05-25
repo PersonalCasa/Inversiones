@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Inversiones">
 <meta name="theme-color" content="#060e1a">
@@ -329,6 +329,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     </div>
     <div class="pin-grid" id="pinLoginGrid"></div>
     <div style="margin-top:16px;font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:1px" id="backToBioBtn" onclick="showBioLogin()">← volver a huella</div>
+    <div style="margin-top:20px;font-size:9px;color:var(--muted);cursor:pointer;letter-spacing:1px;text-decoration:underline" onclick="resetAuth()">Olvidé mi PIN</div>
   </div>
 </div>
 <div id="appContent" style="display:none">
@@ -594,10 +595,17 @@ async function refreshAll(){
 
 // HOLDINGS
 function renderHoldings(){
-  console.log("renderHoldings called, holdings:", S.holdings?.length);
   const list = document.getElementById('holdingsList');
+  if(!list) return;
   list.innerHTML='';
   let tVal=0,tInv=0,tDay=0;
+  if(!S.holdings || !S.holdings.length){
+    list.innerHTML='<div style="text-align:center;color:var(--muted);font-size:10px;padding:20px">Sin posiciones. Agregá una con + agregar posición.</div>';
+    // Aun así actualizar totales a 0
+    document.getElementById('tVal').textContent='0.00';
+    document.getElementById('tInv').textContent='U$S 0.00';
+    return;
+  }
 
   const sortedHoldings=[...S.holdings].sort((a,b)=>(b.units*b.currentPrice)-(a.units*a.currentPrice));
   sortedHoldings.forEach(h=>{
@@ -1000,7 +1008,6 @@ function renderPatrimonio(){
 }
 
 function init(){
-  console.log("init called, S:", JSON.stringify(S).substring(0,200));
   renderHoldings(); renderPlan(); renderActivos();
   if(S.lastUpdate){
     const d=new Date(S.lastUpdate);
@@ -1009,7 +1016,6 @@ function init(){
       d.toLocaleDateString('es-UY',{day:'2-digit',month:'short'});
   }
   // Cargar desde Gist al inicio
-  console.log("Loading from gist...");
   loadFromGist().then(loaded => {
     if(loaded){
       renderHoldings(); renderOps(); renderActivos();
@@ -1278,8 +1284,14 @@ async function loadFromGist(){
     const text = await r.text();
     if(!text || text.trim()==='{}') return false;
     const parsed = JSON.parse(text);
-    if(parsed && Object.keys(parsed).length > 1){
+    if(parsed && parsed.holdings && parsed.holdings.length > 0){
       S = {...def(), ...parsed};
+      localStorage.setItem(KEY, JSON.stringify(S));
+      return true;
+    } else if(parsed && Object.keys(parsed).length > 1){
+      // Tiene datos pero quizás holdings vacío — igual cargar
+      S = {...def(), ...parsed};
+      if(!S.holdings) S.holdings = def().holdings;
       localStorage.setItem(KEY, JSON.stringify(S));
       return true;
     }
@@ -2174,6 +2186,13 @@ function showBioLogin(){
   document.getElementById('bioMsg').className = 'auth-msg';
   // Auto-trigger
   setTimeout(triggerBiometric, 300);
+}
+
+function resetAuth(){
+  if(confirm('¿Resetear el acceso? Tendrás que configurar un nuevo PIN.')){
+    localStorage.removeItem('inv_auth');
+    location.reload();
+  }
 }
 
 function hideAllAuth(){

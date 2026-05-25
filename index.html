@@ -613,7 +613,7 @@ function renderHoldings(){
         <div><div class="ht">${h.ticker}</div><div class="hn">${h.name||''} · ${h.units.toFixed(4)} u.</div></div>
         <div>
           <div class="hv val-mask">U$S ${val.toFixed(2)}</div>
-          <div class="hc ${dc}">${(h.dayChange||0)>=0?'+':''}${(h.dayChange||0).toFixed(2)}% hoy &nbsp;<span class="${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}% total</span></div>
+          <div class="hc">${isWeekend ? '<span style="color:var(--muted);font-size:9px">mercado cerrado</span>' : '<span class="'+dc+'">'+(h.dayChange||0>=0?'+':'')+(h.dayChange||0).toFixed(2)+'% hoy</span>'} &nbsp;<span class="${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}% total</span></div>
         </div>
       </div>
       <div class="hdet" id="hd-${h.id}">
@@ -624,6 +624,7 @@ function renderHoldings(){
           <div><div class="dl">Ganancia %</div><div class="dv ${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}%</div></div>
           <div><div class="dl">Anualizado</div><div class="dv ${gc}" id="ann-${h.id}">—</div></div>
         </div>
+        <div class="irow"><span class="ilbl">Fecha compra</span><input class="inp" id="if-${h.id}" type="date" value="${h.fechaCompra||''}" placeholder="dd/mm/aaaa"></div>
         <div class="irow"><span class="ilbl">Precio actual</span><input class="inp" id="ip-${h.id}" type="number" step="0.01" value="${h.currentPrice.toFixed(2)}"></div>
         <div class="irow"><span class="ilbl">Unidades</span><input class="inp" id="iu-${h.id}" type="number" step="0.000001" value="${h.units}"></div>
         <div id="chart-${h.id}" style="margin-bottom:8px"></div>
@@ -645,6 +646,9 @@ function renderHoldings(){
   });
 
   const tGain=tVal-tInv, tGainPct=tInv>0?(tGain/tInv*100):0;
+  // Si es fin de semana, "Hoy" = 0
+  const now = new Date();
+  const isWeekend = now.getDay() === 0 || now.getDay() === 6;
   const tDayPct=tVal>0?(tDay/(tVal-tDay)*100):0;
   document.getElementById('tVal').textContent=tVal.toFixed(2);
   document.getElementById('tInv').textContent='U$S '+tInv.toFixed(2);
@@ -652,8 +656,13 @@ function renderHoldings(){
   ge.className='mv '+(tGain>=0?'green':'red');
   ge.innerHTML=`<span class="val-mask">${tGain>=0?'+':''}U$S ${tGain.toFixed(2)}</span>&nbsp;<span style="font-size:10px">${tGainPct>=0?'+':''}${tGainPct.toFixed(2)}%</span>`;
   const de=document.getElementById('tDay');
-  de.className='mv '+(tDay>=0?'green':'red');
-  de.innerHTML=`<span class="val-mask">${tDay>=0?'+':''}U$S ${tDay.toFixed(2)}</span>&nbsp;<span style="font-size:10px">${tDayPct>=0?'+':''}${tDayPct.toFixed(2)}%</span>`;
+  if(isWeekend){
+    de.className='mv';
+    de.innerHTML=`<span style="font-size:10px;color:var(--muted)">mercado cerrado</span>`;
+  } else {
+    de.className='mv '+(tDay>=0?'green':'red');
+    de.innerHTML=`<span class="val-mask">${tDay>=0?'+':''}U$S ${tDay.toFixed(2)}</span>&nbsp;<span style="font-size:10px">${tDayPct>=0?'+':''}${tDayPct.toFixed(2)}%</span>`;
+  }
   renderAlloc(tVal);
   setTimeout(applyValuesState,50);
 
@@ -1959,9 +1968,10 @@ function calcAnualizado(gainPct, fechaCompra){
 
 function primerCompra(ticker){
   const ops = (S.ops||[]).filter(o=>o.tipo==='compra' && o.ticker===ticker);
-  if(!ops.length) return null;
-  // La más antigua está al final (están en orden inverso)
-  return ops[ops.length-1].fecha;
+  if(ops.length) return ops[ops.length-1].fecha;
+  // Fallback: fecha guardada en el holding
+  const h = S.holdings.find(h=>h.ticker===ticker);
+  return h?.fechaCompra || null;
 }
 
 function primerCompraGlobal(){

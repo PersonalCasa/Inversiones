@@ -369,9 +369,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
       <div class="mc"><div class="ml">Ganancia</div><div class="mv val-mask" id="tGain">—</div></div>
       <div class="mc"><div class="ml">Hoy</div><div class="mv val-mask" id="tDay">—</div></div>
     </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between">
-      <div><div class="ml">Retorno anualizado</div><div class="mv" id="tAnual" style="font-size:13px">—</div></div>
-      <div style="text-align:right"><div class="ml">Días invertido</div><div class="mv" id="tDias" style="font-size:13px">—</div></div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div class="ml">Retorno anualizado</div><div class="mv" id="tAnual" style="font-size:13px">—</div>
+      <span id="tDias" style="display:none"></span>
     </div>
   </div>
   <div class="sec">Posiciones <span style="margin-left:5px"><span class="live-dot"></span> <span id="pStat" style="font-size:8px;color:var(--muted)">cargando...</span></span></div>
@@ -991,7 +991,7 @@ function renderPatrimonio(){
   const colors=['var(--accent)','var(--accent2)','var(--gold)','#ff9a3c','var(--accent3)'];
   const items=[{l:'Portfolio bursátil',v:bursatil,c:'var(--accent)'},...S.activos.map((a,i)=>({l:a.name,v:a.valor||0,c:colors[(i+1)%colors.length]}))];
   document.getElementById('patDetalle').innerHTML=items.map(i=>`
-    <div class="pat-row"><span><span class="pdot" style="background:${i.c}"></span>${i.l}</span><span class="val-mask">U$S ${(i.v||0).toLocaleString()}</span></div>`).join('');
+    <div class="pat-row"><span><span class="pdot" style="background:${i.c}"></span>${i.l}</span><span class="val-mask">U$S ${(i.v||0).toFixed(2)}</span></div>`).join('');
   setTimeout(applyValuesState,50);
 }
 
@@ -1958,11 +1958,16 @@ function chartLeave(svg){
 function calcAnualizado(gainPct, fechaStr){
   if(!fechaStr) return null;
   try {
+    // Soporta DD/MM/YYYY, D/M/YYYY, D/MM/YYYY
     const parts = fechaStr.split('/');
     if(parts.length !== 3) return null;
-    const fecha = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+    const dia = parseInt(parts[0]);
+    const mes = parseInt(parts[1]) - 1; // 0-indexed
+    const anio = parseInt(parts[2]);
+    if(isNaN(dia)||isNaN(mes)||isNaN(anio)) return null;
+    const fecha = new Date(anio, mes, dia);
     const dias = Math.max(1, Math.round((Date.now() - fecha.getTime()) / 86400000));
-    if(dias < 7) return null;
+    if(dias < 1) return null; // mostrar aunque sean pocos días
     const r = gainPct / 100;
     const anualizado = (Math.pow(1 + r, 365 / dias) - 1) * 100;
     return { anualizado, dias };

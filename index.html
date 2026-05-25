@@ -605,6 +605,7 @@ function renderHoldings(){
     const dayGain=h.units*(h.currentPrice-(h.prevClose||h.buyPrice));
     tVal+=val; tInv+=inv; tDay+=dayGain;
     const gc=gain>=0?'green':'red', dc=(h.dayChange||0)>=0?'green':'red';
+    const dayStr=isWeekend?'—':((h.dayChange||0)>=0?'+':'')+((h.dayChange||0).toFixed(2))+'% hoy';
     const ac=(h.dayChange||0)<=-3?'alrt':(h.dayChange||0)>0?'pos':'';
     const el=document.createElement('div');
     el.className=`holding ${ac}`;
@@ -613,7 +614,7 @@ function renderHoldings(){
         <div><div class="ht">${h.ticker}</div><div class="hn">${h.name||''} · ${h.units.toFixed(4)} u.</div></div>
         <div>
           <div class="hv val-mask">U$S ${val.toFixed(2)}</div>
-          <div class="hc ${dc}">${isWeekend?'—':((h.dayChange||0)>=0?'+':'')+(h.dayChange||0).toFixed(2)+'% hoy'} &nbsp;<span class="${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}% total</span></div>
+          <div class="hc ${dc}">${dayStr} &nbsp;<span class="${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}% total</span></div>
         </div>
       </div>
       <div class="hdet" id="hd-${h.id}">

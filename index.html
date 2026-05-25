@@ -605,6 +605,7 @@ function renderHoldings(){
     const dayGain=h.units*(h.currentPrice-(h.prevClose||h.buyPrice));
     tVal+=val; tInv+=inv; tDay+=dayGain;
     const gc=gain>=0?'green':'red', dc=(h.dayChange||0)>=0?'green':'red';
+    const fComp=h.fechaCompra||'';
     const dayStr=isWeekend?'—':((h.dayChange||0)>=0?'+':'')+((h.dayChange||0).toFixed(2))+'% hoy';
     const ac=(h.dayChange||0)<=-3?'alrt':(h.dayChange||0)>0?'pos':'';
     const el=document.createElement('div');
@@ -625,7 +626,7 @@ function renderHoldings(){
           <div><div class="dl">Ganancia %</div><div class="dv ${gc}">${gainPct>=0?'+':''}${gainPct.toFixed(2)}%</div></div>
           <div><div class="dl">Anualizado</div><div class="dv ${gc}" id="ann-${h.id}">—</div></div>
         </div>
-        <div class="irow"><span class="ilbl">Fecha compra</span><input class="inp" id="if-${h.id}" type="date" value="${h.fechaCompra||''}" placeholder="dd/mm/aaaa"></div>
+        <div class="irow"><span class="ilbl">Fecha compra</span><input class="inp" id="if-${h.id}" type="date" value="${fComp}" placeholder="dd/mm/aaaa"></div>
         <div class="irow"><span class="ilbl">Precio actual</span><input class="inp" id="ip-${h.id}" type="number" step="0.01" value="${h.currentPrice.toFixed(2)}"></div>
         <div class="irow"><span class="ilbl">Unidades</span><input class="inp" id="iu-${h.id}" type="number" step="0.000001" value="${h.units}"></div>
         <div id="chart-${h.id}" style="margin-bottom:8px"></div>

@@ -369,7 +369,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
       <div class="mc"><div class="ml">Ganancia</div><div class="mv val-mask" id="tGain">—</div></div>
       <div class="mc"><div class="ml">Hoy</div><div class="mv val-mask" id="tDay">—</div></div>
     </div>
-
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between">
+      <div><div class="ml">Retorno anualizado</div><div class="mv" id="tAnual" style="font-size:13px">—</div></div>
+      <div style="text-align:right"><div class="ml">Días invertido</div><div class="mv" id="tDias" style="font-size:13px">—</div></div>
+    </div>
   </div>
   <div class="sec">Posiciones <span style="margin-left:5px"><span class="live-dot"></span> <span id="pStat" style="font-size:8px;color:var(--muted)">cargando...</span></span></div>
   <div id="holdingsList"></div>
@@ -630,6 +633,7 @@ function renderHoldings(){
           '<div><div class="dl">Precio actual</div><div class="dv val-mask">U$S ' + h.currentPrice.toFixed(2) + '</div></div>',
           '<div><div class="dl">Ganancia U$S</div><div class="dv val-mask ' + gc + '">' + (gain>=0?'+':'') + gain.toFixed(2) + '</div></div>',
           '<div><div class="dl">Ganancia %</div><div class="dv ' + gc + '">' + (gainPct>=0?'+':'') + gainPct.toFixed(2) + '%</div></div>',
+          '<div><div class="dl">Anualizado</div><div class="dv ' + gc + '" id="ann-' + h.id + '">—</div></div>',
         '</div>',
         '<div class="irow"><span class="ilbl">Precio actual</span><input class="inp" id="ip-' + h.id + '" type="number" step="0.01" value="' + h.currentPrice.toFixed(2) + '"></div>',
         '<div class="irow"><span class="ilbl">Unidades</span><input class="inp" id="iu-' + h.id + '" type="number" step="0.000001" value="' + h.units + '"></div>',
@@ -656,6 +660,20 @@ function renderHoldings(){
   de.className='mv '+(tDay>=0?'green':'red');
   de.innerHTML=`<span class="val-mask">${tDay>=0?'+':''}U$S ${tDay.toFixed(2)}</span>&nbsp;<span style="font-size:10px">${tDayPct>=0?'+':''}${tDayPct.toFixed(2)}%</span>`;
   renderAlloc(tVal);
+  // Anualizado global
+  const gAnn = calcAnualizado(tGainPct, primerCompraGlobal());
+  const elAnual = document.getElementById('tAnual');
+  const elDias = document.getElementById('tDias');
+  if(elAnual){
+    if(gAnn){
+      elAnual.textContent = (gAnn.anualizado>=0?'+':'') + gAnn.anualizado.toFixed(2) + '% / año';
+      elAnual.className = 'mv ' + (gAnn.anualizado>=0?'green':'red');
+      if(elDias) elDias.textContent = gAnn.dias + ' días';
+    } else {
+      elAnual.textContent = 'registrá operaciones';
+      if(elDias) elDias.textContent = '—';
+    }
+  }
   setTimeout(applyValuesState,50);
 
 
@@ -1934,6 +1952,34 @@ function chartLeave(svg){
   });
 }
 
+
+
+// ── RETORNO ANUALIZADO ──
+function calcAnualizado(gainPct, fechaStr){
+  if(!fechaStr) return null;
+  try {
+    const parts = fechaStr.split('/');
+    if(parts.length !== 3) return null;
+    const fecha = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+    const dias = Math.max(1, Math.round((Date.now() - fecha.getTime()) / 86400000));
+    if(dias < 7) return null;
+    const r = gainPct / 100;
+    const anualizado = (Math.pow(1 + r, 365 / dias) - 1) * 100;
+    return { anualizado, dias };
+  } catch(e){ return null; }
+}
+
+function primerCompra(ticker){
+  const ops = (S.ops||[]).filter(o=>o.tipo==='compra' && o.ticker===ticker);
+  if(ops.length) return ops[ops.length-1].fecha;
+  return null;
+}
+
+function primerCompraGlobal(){
+  const ops = (S.ops||[]).filter(o=>o.tipo==='compra');
+  if(!ops.length) return null;
+  return ops[ops.length-1].fecha;
+}
 
 // ══ AUTH SYSTEM ══
 const AUTH_KEY = 'inv_auth';

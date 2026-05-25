@@ -611,7 +611,7 @@ function renderHoldings(){
     const el=document.createElement('div');
     el.className=`holding ${ac}`;
     el.innerHTML=`
-      <div class="hm" onclick="togH(${h.id})">
+      <div class="hm" data-id="${h.id}" onclick="togH(this.dataset.id)">
         <div><div class="ht">${h.ticker}</div><div class="hn">${h.name||''} · ${h.units.toFixed(4)} u.</div></div>
         <div>
           <div class="hv val-mask">U$S ${val.toFixed(2)}</div>
@@ -630,11 +630,11 @@ function renderHoldings(){
         <div class="irow"><span class="ilbl">Precio actual</span><input class="inp" id="ip-${h.id}" type="number" step="0.01" value="${h.currentPrice.toFixed(2)}"></div>
         <div class="irow"><span class="ilbl">Unidades</span><input class="inp" id="iu-${h.id}" type="number" step="0.000001" value="${h.units}"></div>
         <div id="chart-${h.id}" style="margin-bottom:8px"></div>
-        <button style="width:100%;background:none;border:1px solid var(--border);border-radius:7px;padding:6px;color:var(--muted);font-size:9px;cursor:pointer;font-family:monospace;letter-spacing:1px;margin-bottom:6px" onclick="loadChartInHolding('${h.ticker}','${h.id}')">▲ ver gráfico</button>
-        <button class="btn btn-s" onclick="saveH(${h.id})">guardar</button>
-        <button class="btn" style="width:100%;margin-top:3px;background:rgba(0,212,168,0.12);color:var(--accent);border:1px solid rgba(0,212,168,0.3)" onclick="comprarMasDeHolding('${h.ticker}',${h.currentPrice})">+ comprar más</button>
-        <button class="btn" style="width:100%;margin-top:3px;background:rgba(255,107,107,0.12);color:var(--accent3);border:1px solid rgba(255,107,107,0.25)" onclick="venderDesdeHolding('${h.ticker}')">− vender</button>
-        <button class="btn btn-d" onclick="delH(${h.id})">eliminar posición</button>
+        <button style="width:100%;background:none;border:1px solid var(--border);border-radius:7px;padding:6px;color:var(--muted);font-size:9px;cursor:pointer;font-family:monospace;letter-spacing:1px;margin-bottom:6px" data-ticker="${h.ticker}" data-hid="${h.id}" onclick="loadChartInHolding(this.dataset.ticker,this.dataset.hid)">▲ ver gráfico</button>
+        <button class="btn btn-s" data-id="${h.id}" onclick="saveH(this.dataset.id)">guardar</button>
+        <button class="btn" style="width:100%;margin-top:3px;background:rgba(0,212,168,0.12);color:var(--accent);border:1px solid rgba(0,212,168,0.3)" data-ticker="${h.ticker}" data-price="${h.currentPrice}" onclick="comprarMasDeHolding(this.dataset.ticker,parseFloat(this.dataset.price))">+ comprar más</button>
+        <button class="btn" style="width:100%;margin-top:3px;background:rgba(255,107,107,0.12);color:var(--accent3);border:1px solid rgba(255,107,107,0.25)" data-ticker="${h.ticker}" onclick="venderDesdeHolding(this.dataset.ticker)">− vender</button>
+        <button class="btn btn-d" data-id="${h.id}" onclick="delH(this.dataset.id)">eliminar posición</button>
       </div>`;
     list.appendChild(el);
     // Calcular anualizado para este holding

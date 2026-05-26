@@ -456,7 +456,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <div class="total-amt"><span class="cur">U$S </span><span id="patTotal" class="val-mask">—</span></div>
   </div>
   <div class="card" id="patDetalle"></div>
-  <div class="sec" style="margin-top:20px">Sincronización</div>
+  <div class="sec" style="margin-top:20px">Activos físicos</div>
+  <button class="btn-add" onclick="goTo('activos',null)" style="margin-bottom:12px">→ Ver activos físicos</button>
+  <div class="sec">Sincronización</div>
   <div class="card">
     <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.6">Guardá tus datos en GitHub para no perderlos si borrás caché o cambiás de celular.</div>
     <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:var(--accent)">✓ Sincronización activa</span><span id="syncIndicator2" style="font-size:10px;color:var(--muted)">☁ al día</span></div>
@@ -518,6 +520,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <div><div style="font-size:11px">¿Qué comprar o vender ahora?</div><div style="font-size:9px;color:var(--muted)">Basado en mercado, noticias y tu plan</div></div>
   </button>
 
+  <div style="margin-top:4px">
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:6px">O PREGUNTÁ ALGO ESPECÍFICO</div>
+    <textarea id="aiPromptInput" placeholder="Ej: ¿Conviene comprar QQQ ahora con la situación de tasas?" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-family:DM Mono,monospace;font-size:11px;resize:none;height:70px;outline:none"></textarea>
+    <button onclick="consultarIALibre()" style="width:100%;margin-top:6px;padding:11px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:DM Mono,monospace;font-size:11px;cursor:pointer;letter-spacing:1px">→ Consultar con mi contexto</button>
+  </div>
   <div class="ai-response" id="aiResponse"></div>
 </div>
 <!-- OPERACIONES -->
@@ -550,9 +557,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
     Portfolio
   </button>
-  <button class="nav-btn" onclick="goTo('activos',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>
-    Activos
+  <button class="nav-btn" onclick="goTo('operaciones',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Historial
   </button>
   <button class="nav-btn" onclick="goTo('patrimonio',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><text x="12" y="19" text-anchor="middle" font-size="7" fill="currentColor" stroke="none" font-weight="bold">$</text></svg>
@@ -2131,7 +2138,7 @@ function renderAnalitica(){
   const gainEl = document.getElementById('an-gain');
   const gainPctEl = document.getElementById('an-gain-pct');
   if(gainEl){
-    gainEl.textContent = (tGain>=0?'+':'') + 'U$S ' + tGain.toFixed(2);
+    gainEl.innerHTML = '<span class="val-mask">' + (tGain>=0?'+':'') + 'U$S ' + tGain.toFixed(2) + '</span>';
     gainEl.className = 'kpi-val2 ' + (tGain>=0?'green':'red');
   }
   if(gainPctEl) gainPctEl.textContent = (tGainPct>=0?'+':'') + tGainPct.toFixed(2) + '%';
@@ -2140,7 +2147,7 @@ function renderAnalitica(){
   const todayEl = document.getElementById('an-today');
   const todayPctEl = document.getElementById('an-today-pct');
   if(todayEl){
-    todayEl.textContent = (tDay>=0?'+':'') + 'U$S ' + tDay.toFixed(2);
+    todayEl.innerHTML = '<span class="val-mask">' + (tDay>=0?'+':'') + 'U$S ' + tDay.toFixed(2) + '</span>';
     todayEl.className = 'kpi-val2 ' + (tDay>=0?'green':'red');
   }
   if(todayPctEl) todayPctEl.textContent = (tDayPct>=0?'+':'') + tDayPct.toFixed(2) + '%';
@@ -2214,6 +2221,11 @@ function renderInsights(holdings, tVal, tGain, tGainPct, tDayPct){
 }
 
 // ══ CONSULTAR IA ══
+function abrirClaudeConPrompt(prompt){
+  const url = "https://claude.ai/new?q=" + encodeURIComponent(prompt);
+  window.open(url, "_blank");
+}
+
 async function consultarIA(tipo){
   const el = document.getElementById('aiResponse');
   el.classList.add('visible');
@@ -2269,32 +2281,26 @@ POSICIÓN TRANSITORIA A VENDER: URTH
 Respondé en español rioplatense. Incluí: 1) ¿Es buen momento para la próxima compra de SPY?, 2) ¿Conviene vender URTH ahora o esperar?, 3) ¿Alguna oportunidad puntual en el mercado hoy? Sé específico y directo. Máximo 250 palabras.`
   };
 
-  try {
-    const useWebSearch = tipo === 'mercado' || tipo === 'recomendacion';
-    const body = {
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompts[tipo] }]
-    };
-    if(useWebSearch){
-      body.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
-    }
+  // Abrir Claude.ai con el prompt pre-cargado
+  abrirClaudeConPrompt(prompts[tipo]);
+  el.classList.remove('visible');
+}
 
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const d = await r.json();
-    const text = (d.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\n');
-    if(text){
-      el.innerHTML = '<div style="white-space:pre-wrap;font-size:11px;line-height:1.7">' + text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>') + '</div><div style="font-size:8px;color:var(--muted);margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">⚠ No es asesoramiento financiero regulado. La decisión es tuya.</div>';
-    } else {
-      el.innerHTML = '<div style="color:var(--muted);font-size:10px">No se pudo obtener respuesta. Intentá de nuevo.</div>';
-    }
-  } catch(e){
-    el.innerHTML = '<div style="color:var(--accent3);font-size:10px">Error: ' + e.message + '</div>';
-  }
+function consultarIALibre(){
+  const input = document.getElementById('aiPromptInput');
+  const pregunta = input?.value?.trim();
+  if(!pregunta){ alert('Escribí tu pregunta primero'); return; }
+
+  const holdings = S.holdings||[];
+  let tVal=0, tInv=0;
+  holdings.forEach(h=>{ tVal+=h.units*h.currentPrice; tInv+=h.units*h.buyPrice; });
+  const portfolioCtx = holdings.map(h=>{
+    const g = (h.currentPrice-h.buyPrice)/h.buyPrice*100;
+    return h.ticker + ': ' + h.units.toFixed(4) + 'u a U$S ' + h.currentPrice.toFixed(2) + ' (' + (g>=0?'+':'') + g.toFixed(2) + '%)';
+  }).join(', ');
+
+  const prompt = 'Contexto de mi portfolio: ' + (portfolioCtx||'sin posiciones') + '. Valor total: U$S ' + tVal.toFixed(2) + '. Estructura objetivo: SPY 40%, QQQ 20%, EEM 10%, VEA 10%, VTV 10%, VIG 5%, Agresivo 5%. Perfil: conservador con algo agresivo, meta retiro a los 50 años.\n\nMi pregunta: ' + pregunta;
+  abrirClaudeConPrompt(prompt);
 }
 
 // ══ AUTH SYSTEM ══

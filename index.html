@@ -238,6 +238,37 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 .chart-stat{text-align:center}
 .chart-stat-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
 .chart-stat-val{font-size:11px}
+
+/* ANALYTICS */
+.kpi-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}
+.kpi-card.accent{border-color:var(--accent)}
+.kpi-lbl2{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
+.kpi-val2{font-family:'Fraunces',serif;font-size:22px;font-weight:700}
+.kpi-sub2{font-size:8px;color:var(--muted);margin-top:2px}
+.rank-row2{margin-bottom:10px}
+.rank-top2{display:flex;justify-content:space-between;margin-bottom:4px;font-size:10px}
+.rank-bg{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.rank-fill2{height:100%;border-radius:3px}
+.insight2{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--surface);border-radius:10px;margin-bottom:7px}
+.insight2.good{border-left:3px solid var(--accent)}
+.insight2.warn{border-left:3px solid var(--gold)}
+.insight2.bad{border-left:3px solid var(--accent3)}
+.insight2.info{border-left:3px solid var(--accent2)}
+.insight2-icon{font-size:15px;flex-shrink:0}
+.insight2-title{font-size:11px;font-weight:500;margin-bottom:2px}
+.insight2-desc{font-size:9px;color:var(--muted);line-height:1.5}
+.ai-btn{width:100%;padding:13px;border:1px solid var(--border);border-radius:10px;background:var(--surface);
+  color:var(--text);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;
+  text-align:left;display:flex;align-items:center;gap:10px;margin-bottom:8px;transition:all .2s}
+.ai-btn:active{opacity:0.7}
+.ai-btn.primary{border-color:var(--accent);background:rgba(0,212,168,0.06)}
+.ai-btn.secondary{border-color:var(--accent2);background:rgba(58,123,213,0.06)}
+.ai-btn.tertiary{border-color:var(--gold);background:rgba(245,200,66,0.06)}
+.ai-response{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:14px;margin-top:10px;font-size:11px;line-height:1.7;display:none}
+.ai-response.visible{display:block}
+.ai-loading{text-align:center;padding:20px;color:var(--muted);font-size:10px}
 .spinner{display:inline-block;width:11px;height:11px;border:2px solid var(--border);
   border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-left:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -435,6 +466,60 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 
 
 
+
+<!-- ANALÍTICA -->
+<div class="page" id="page-analitica">
+  <!-- KPIs -->
+  <div class="kpi-grid-2" style="margin-top:4px">
+    <div class="kpi-card accent">
+      <div class="kpi-lbl2">Retorno anualizado</div>
+      <div class="kpi-val2 green" id="an-annual">—</div>
+      <div class="kpi-sub2">portfolio bursátil</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl2">Patrimonio total</div>
+      <div class="kpi-val2 blue val-mask" id="an-pat">—</div>
+      <div class="kpi-sub2">bursátil + activos</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl2">Ganancia total</div>
+      <div class="kpi-val2" id="an-gain">—</div>
+      <div class="kpi-sub2" id="an-gain-pct"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl2">Ganancia hoy</div>
+      <div class="kpi-val2" id="an-today">—</div>
+      <div class="kpi-sub2" id="an-today-pct"></div>
+    </div>
+  </div>
+
+  <!-- Ranking rentabilidad -->
+  <div class="sec">Ranking por rentabilidad</div>
+  <div class="card" id="an-ranking"></div>
+
+  <!-- Insights -->
+  <div class="sec">Insights automáticos</div>
+  <div id="an-insights"></div>
+
+  <!-- IA -->
+  <div class="sec">Consultar IA</div>
+  <div style="font-size:9px;color:var(--muted);margin-bottom:12px;line-height:1.6">Análisis basado en tus datos reales + noticias del mercado. No es asesoramiento financiero.</div>
+
+  <button class="ai-btn primary" onclick="consultarIA('portfolio')">
+    <span>📊</span>
+    <div><div style="font-size:11px">Analizar mi portfolio</div><div style="font-size:9px;color:var(--muted)">Holdings, P&L, diversificación, recomendaciones</div></div>
+  </button>
+  <button class="ai-btn secondary" onclick="consultarIA('mercado')">
+    <span>📰</span>
+    <div><div style="font-size:11px">Reporte del mercado hoy</div><div style="font-size:9px;color:var(--muted)">Noticias + impacto en tus posiciones</div></div>
+  </button>
+  <button class="ai-btn tertiary" onclick="consultarIA('recomendacion')">
+    <span>💡</span>
+    <div><div style="font-size:11px">¿Qué comprar o vender ahora?</div><div style="font-size:9px;color:var(--muted)">Basado en mercado, noticias y tu plan</div></div>
+  </button>
+
+  <div class="ai-response" id="aiResponse"></div>
+</div>
 <!-- OPERACIONES -->
 <div class="page" id="page-operaciones">
   <div class="sec" style="margin-top:4px">Operaciones</div>
@@ -453,9 +538,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
 </div>
 
 <nav class="bottom-nav">
-  <button class="nav-btn" onclick="goTo('operaciones',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    Historial
+  <button class="nav-btn" onclick="goTo('analitica',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+    Analítica
   </button>
   <button class="nav-btn" onclick="goTo('mercado',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/><polyline points="16,7 22,7 22,13"/></svg>
@@ -513,6 +598,7 @@ function goTo(page,btn){
   if(page==='mercado'){ renderMkt('todas'); setTimeout(updateNotifBtn,100); }
   if(page==='patrimonio') renderPatrimonio();
   if(page==='operaciones'){ renderOps(); setTimeout(applyValuesState,80); }
+  if(page==='analitica'){ renderAnalitica(); }
 }
 
 // FINNHUB FETCH
@@ -716,13 +802,15 @@ function addPosition(){
 
 // ALLOC
 function renderAlloc(tVal){
-  const targets=[
-    {k:'SPY',pct:.40,color:'var(--accent)',risk:'cl',rl:'bajo'},
-    {k:'URTH',pct:.25,color:'var(--accent2)',risk:'cl',rl:'bajo'},
-    {k:'QQQ',pct:.20,color:'var(--gold)',risk:'cm',rl:'medio'},
-    {k:'GLD',pct:.10,color:'#ff9a3c',risk:'cl',rl:'muy bajo'},
-    {k:'Agresivo',pct:.05,color:'var(--accent3)',risk:'ch',rl:'alto'},
-  ];
+   const targets=[
+     {k:'SPY',  pct:.40,color:'var(--accent2)',risk:'cl',rl:'bajo'},
+     {k:'QQQ',  pct:.20,color:'var(--gold)',   risk:'cm',rl:'medio'},
+     {k:'EEM',  pct:.10,color:'var(--accent)', risk:'cm',rl:'medio'},
+     {k:'VEA',  pct:.10,color:'#7eb8f7',       risk:'cl',rl:'bajo'},
+     {k:'VTV',  pct:.10,color:'#a0c4ff',       risk:'cl',rl:'bajo'},
+     {k:'VIG',  pct:.05,color:'#a0a0a0',       risk:'vl',rl:'muy bajo'},
+     {k:'Agresivo',pct:.05,color:'var(--accent3)',risk:'ch',rl:'alto'},
+   ];
   const agg=['NVDA','TSLA','AMZN','GOOG','META'];
   document.getElementById('allocCard').innerHTML=targets.map(t=>{
     const obj=tVal*t.pct;
@@ -737,6 +825,17 @@ function renderAlloc(tVal){
       <div class="as"><span>actual ${actualPct.toFixed(1)}%</span></div>
     </div>`;
   }).join('');
+  // URTH transitoria
+  const _urthH = S.holdings.find(h=>h.ticker==='URTH');
+  if(_urthH){
+    const _uVal = _urthH.units*_urthH.currentPrice;
+    const _uPct = tVal>0?(_uVal/tVal*100):0;
+    const _uGain = (_urthH.currentPrice-_urthH.buyPrice)/_urthH.buyPrice*100;
+    const _uEl = document.createElement('div');
+    _uEl.style.cssText='margin-top:8px;padding:10px 12px;background:rgba(245,200,66,0.06);border:1px dashed rgba(245,200,66,0.3);border-radius:9px';
+    _uEl.innerHTML='<div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:#f5c842">URTH <span style="font-size:8px;background:rgba(245,200,66,0.15);padding:1px 5px;border-radius:3px;margin-left:4px;color:#f5c842">TRANSITORIA</span></span><span style="font-size:10px;color:#f5c842">'+_uPct.toFixed(1)+'% actual</span></div><div style="font-size:9px;color:var(--muted);margin-top:4px">Pendiente de venta · Ganancia: <span style="color:'+(_uGain>=0?'var(--accent)':'var(--accent3)')+'">'+(_uGain>=0?'+':'')+_uGain.toFixed(2)+'%</span></div>';
+    document.getElementById('allocCard').appendChild(_uEl);
+  }
 }
 
 // PLAN
@@ -747,9 +846,9 @@ function renderPlan(){
     {m:'Jul 2026',t:'SPY',a:'U$S 250',done:false,cur:false},
     {m:'Ago 2026',t:'QQQ',a:'U$S 250',done:false,cur:false},
     {m:'Sep 2026',t:'SPY',a:'U$S 250',done:false,cur:false},
-    {m:'Oct 2026',t:'GLD',a:'U$S 250',done:false,cur:false},
-    {m:'Nov 2026',t:'SPY',a:'U$S 250',done:false,cur:false},
-    {m:'Dic 2026',t:'Agresivo',a:'U$S 250',done:false,cur:false},
+    {m:'Oct 2026',t:'EEM',a:'U$S 250',done:false,cur:false},
+    {m:'Nov 2026',t:'VTV',a:'U$S 250',done:false,cur:false},
+    {m:'Dic 2026',t:'VIG',a:'U$S 250',done:false,cur:false},
   ];
   document.getElementById('planCard').innerHTML=plan.map(p=>`
     <div class="pr ${p.done?'done':''} ${p.cur?'cur':''}">
@@ -1999,6 +2098,203 @@ function primerCompraGlobal(){
   const ops = (S.ops||[]).filter(o=>o.tipo==='compra');
   if(!ops.length) return null;
   return ops[ops.length-1].fecha;
+}
+
+
+// ══ ANALÍTICA ══
+function renderAnalitica(){
+  // KPIs
+  const holdings = S.holdings||[];
+  let tVal=0, tInv=0, tDay=0;
+  holdings.forEach(h=>{
+    tVal += h.units*h.currentPrice;
+    tInv += h.units*h.buyPrice;
+    tDay += h.units*(h.currentPrice-(h.prevClose||h.currentPrice));
+  });
+  const tGain = tVal-tInv;
+  const tGainPct = tInv>0?(tGain/tInv*100):0;
+  const tDayPct = tVal>0?(tDay/tVal*100):0;
+
+  // Anualizado global
+  const gAnn = calcAnualizado(tGainPct, primerCompraGlobal());
+  const annEl = document.getElementById('an-annual');
+  if(annEl) annEl.textContent = gAnn ? (gAnn.anualizado>=0?'+':'') + gAnn.anualizado.toFixed(2) + '% / año' : '—';
+  if(annEl) annEl.className = 'kpi-val2 ' + (tGain>=0?'green':'red');
+
+  // Patrimonio total
+  let patTotal = tVal;
+  (S.activos||[]).forEach(a=>{ patTotal += (a.valor||0); });
+  const patEl = document.getElementById('an-pat');
+  if(patEl) patEl.textContent = 'U$S ' + patTotal.toFixed(0);
+
+  // Ganancia total
+  const gainEl = document.getElementById('an-gain');
+  const gainPctEl = document.getElementById('an-gain-pct');
+  if(gainEl){
+    gainEl.textContent = (tGain>=0?'+':'') + 'U$S ' + tGain.toFixed(2);
+    gainEl.className = 'kpi-val2 ' + (tGain>=0?'green':'red');
+  }
+  if(gainPctEl) gainPctEl.textContent = (tGainPct>=0?'+':'') + tGainPct.toFixed(2) + '%';
+
+  // Hoy
+  const todayEl = document.getElementById('an-today');
+  const todayPctEl = document.getElementById('an-today-pct');
+  if(todayEl){
+    todayEl.textContent = (tDay>=0?'+':'') + 'U$S ' + tDay.toFixed(2);
+    todayEl.className = 'kpi-val2 ' + (tDay>=0?'green':'red');
+  }
+  if(todayPctEl) todayPctEl.textContent = (tDayPct>=0?'+':'') + tDayPct.toFixed(2) + '%';
+
+  // Ranking
+  renderRanking(holdings, tVal);
+
+  // Insights
+  renderInsights(holdings, tVal, tGain, tGainPct, tDayPct);
+
+  setTimeout(applyValuesState, 80);
+}
+
+function renderRanking(holdings, tVal){
+  const el = document.getElementById('an-ranking');
+  if(!el) return;
+  if(!holdings.length){ el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:10px;padding:16px">Sin posiciones</div>'; return; }
+
+  const rows = holdings.map(h=>{
+    const gain = (h.currentPrice-h.buyPrice)/h.buyPrice*100;
+    const val = h.units*h.currentPrice;
+    const pct = tVal>0?(val/tVal*100):0;
+    const ann = calcAnualizado(gain, primerCompra(h.ticker));
+    return {ticker:h.ticker, gain, val, pct, ann};
+  }).sort((a,b)=>b.gain-a.gain);
+
+  const maxGain = Math.max(...rows.map(r=>Math.abs(r.gain)), 1);
+  el.innerHTML = '<div style="font-size:8px;color:var(--muted);margin-bottom:12px;letter-spacing:1px">MÁS RENTABLE → MENOS RENTABLE</div>' +
+    rows.map(r=>{
+      const w = Math.min(100, Math.abs(r.gain)/maxGain*100);
+      const c = r.gain>=0?'var(--accent)':'var(--accent3)';
+      const annStr = r.ann ? ' · ' + (r.ann.anualizado>=0?'+':'') + r.ann.anualizado.toFixed(0) + '% /año' : '';
+      return '<div class="rank-row2"><div class="rank-top2"><span>' + r.ticker + '</span><span style="color:' + c + '">' + (r.gain>=0?'+':'') + r.gain.toFixed(2) + '%' + annStr + '</span></div><div class="rank-bg"><div class="rank-fill2" style="width:' + w + '%;background:' + c + '"></div></div></div>';
+    }).join('');
+}
+
+function renderInsights(holdings, tVal, tGain, tGainPct, tDayPct){
+  const el = document.getElementById('an-insights');
+  if(!el) return;
+  const insights = [];
+
+  // Concentración
+  if(holdings.length === 1){
+    insights.push({type:'warn',icon:'⚖️',title:'Concentración alta',desc:'100% en un solo activo (' + holdings[0].ticker + '). Al diversificar con SPY y QQQ reducís el riesgo.'});
+  }
+
+  // Portfolio positivo
+  if(tGain > 0){
+    insights.push({type:'good',icon:'📈',title:'Portfolio en verde',desc:'Ganancia acumulada de ' + (tGainPct>=0?'+':'') + tGainPct.toFixed(2) + '%. Mantené el plan de compras.'});
+  } else if(tGain < 0){
+    insights.push({type:'bad',icon:'📉',title:'Portfolio en rojo',desc:'Pérdida acumulada de ' + tGainPct.toFixed(2) + '%. Revisar si es momento de promediar hacia abajo.'});
+  }
+
+  // Activos sin datos
+  const activosSinDatos = (S.activos||[]).filter(a=>!(a.movimientos||[]).length);
+  if(activosSinDatos.length){
+    insights.push({type:'info',icon:'🔍',title:'Activos sin movimientos',desc:activosSinDatos.length + ' activo(s) sin ingresos ni gastos cargados. Agregá movimientos para ver su rentabilidad.'});
+  }
+
+  // Plan de compra próxima
+  insights.push({type:'info',icon:'🎯',title:'Próxima compra: SPY',desc:'Según tu plan, junio es mes de SPY. La asignación actual de SPY es 0% vs objetivo 40%.'});
+
+  // URTH transitoria
+  const urth = holdings.find(h=>h.ticker==='URTH');
+  if(urth){
+    const g = (urth.currentPrice-urth.buyPrice)/urth.buyPrice*100;
+    insights.push({type:'warn',icon:'🔄',title:'URTH — posición transitoria',desc:'Subió ' + (g>=0?'+':'') + g.toFixed(2) + '% desde tu compra. Evaluá vender si seguís con la nueva estructura de cartera.'});
+  }
+
+  el.innerHTML = insights.map(i=>'<div class="insight2 ' + i.type + '"><span class="insight2-icon">' + i.icon + '</span><div><div class="insight2-title">' + i.title + '</div><div class="insight2-desc">' + i.desc + '</div></div></div>').join('');
+}
+
+// ══ CONSULTAR IA ══
+async function consultarIA(tipo){
+  const el = document.getElementById('aiResponse');
+  el.classList.add('visible');
+  el.innerHTML = '<div class="ai-loading"><span class="spinner"></span>&nbsp;&nbsp;consultando...</div>';
+
+  // Armar contexto del portfolio
+  const holdings = S.holdings||[];
+  let tVal=0, tInv=0;
+  holdings.forEach(h=>{ tVal+=h.units*h.currentPrice; tInv+=h.units*h.buyPrice; });
+  const tGain = tVal-tInv;
+  const tGainPct = tInv>0?(tGain/tInv*100):0;
+
+  const portfolioCtx = holdings.map(h=>{
+    const g = (h.currentPrice-h.buyPrice)/h.buyPrice*100;
+    return h.ticker + ': ' + h.units.toFixed(4) + ' u. a U$S ' + h.currentPrice.toFixed(2) + ' (comprado a U$S ' + h.buyPrice.toFixed(2) + ', ganancia ' + (g>=0?'+':'') + g.toFixed(2) + '%)';
+  }).join('\n');
+
+  const activosCtx = (S.activos||[]).map(a=>a.nombre + ': U$S ' + (a.valor||0).toLocaleString()).join(', ') || 'Sin activos físicos';
+
+  const prompts = {
+    portfolio: `Sos un analista financiero experimentado. Analizá el siguiente portfolio de inversiones y dá recomendaciones concretas en español rioplatense, tono directo y técnico.
+
+PORTFOLIO BURSÁTIL:
+${portfolioCtx}
+Valor total: U$S ${tVal.toFixed(2)}
+Ganancia total: ${(tGainPct>=0?'+':'')}${tGainPct.toFixed(2)}%
+
+ACTIVOS FÍSICOS: ${activosCtx}
+
+PERFIL: Inversor conservador con algo agresivo. Meta de retiro a los 50 años. Aporte mensual U$S 250.
+
+ESTRUCTURA OBJETIVO DE CARTERA: SPY 40%, QQQ 20%, EEM 10%, VEA 10%, VTV 10%, VIG 5%, Agresivo 5%.
+
+POSICIÓN TRANSITORIA: URTH (pendiente de venta cuando sea oportuno).
+
+Analizá: diversificación, concentración de riesgo, alineación con los objetivos, y dá 3 recomendaciones concretas. Sé directo y específico. Máximo 250 palabras.`,
+
+    mercado: `Sos un analista financiero. Buscá las noticias más relevantes del mercado financiero global de hoy (${new Date().toLocaleDateString('es-UY')}) y analizá cómo impactan en este portfolio:
+
+POSICIONES: ${portfolioCtx || 'Sin posiciones aún'}
+
+Estructura objetivo: SPY 40%, QQQ 20%, EEM 10%, VEA 10%, VTV 10%, VIG 5%, Agresivo 5%.
+
+Respondé en español rioplatense, tono directo. Incluí: 1) Noticias más relevantes del día, 2) Impacto directo en las posiciones actuales, 3) Qué estar atento esta semana. Máximo 250 palabras.`,
+
+    recomendacion: `Sos un analista financiero. Basándote en el estado actual del mercado y el siguiente portfolio, dá recomendaciones concretas de compra o venta.
+
+PORTFOLIO ACTUAL: ${portfolioCtx || 'Sin posiciones'}
+PRÓXIMA COMPRA PLANIFICADA: SPY (junio 2026, U$S 250)
+ESTRUCTURA OBJETIVO: SPY 40%, QQQ 20%, EEM 10%, VEA 10%, VTV 10%, VIG 5%, Agresivo 5%
+POSICIÓN TRANSITORIA A VENDER: URTH
+
+Respondé en español rioplatense. Incluí: 1) ¿Es buen momento para la próxima compra de SPY?, 2) ¿Conviene vender URTH ahora o esperar?, 3) ¿Alguna oportunidad puntual en el mercado hoy? Sé específico y directo. Máximo 250 palabras.`
+  };
+
+  try {
+    const useWebSearch = tipo === 'mercado' || tipo === 'recomendacion';
+    const body = {
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompts[tipo] }]
+    };
+    if(useWebSearch){
+      body.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
+    }
+
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    const text = (d.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\n');
+    if(text){
+      el.innerHTML = '<div style="white-space:pre-wrap;font-size:11px;line-height:1.7">' + text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>') + '</div><div style="font-size:8px;color:var(--muted);margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">⚠ No es asesoramiento financiero regulado. La decisión es tuya.</div>';
+    } else {
+      el.innerHTML = '<div style="color:var(--muted);font-size:10px">No se pudo obtener respuesta. Intentá de nuevo.</div>';
+    }
+  } catch(e){
+    el.innerHTML = '<div style="color:var(--accent3);font-size:10px">Error: ' + e.message + '</div>';
+  }
 }
 
 // ══ AUTH SYSTEM ══

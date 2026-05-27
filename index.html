@@ -1348,6 +1348,7 @@ function renderOps(){
           <div class="op-val val-mask">${isBuy?'-':'+'} U$S ${op.total.toFixed(2)}</div>
           <div class="op-pnl">${pnlStr}</div>
         </div>
+           <button onclick="eliminarOp(${op.id})" style="margin-top:4px;background:none;border:none;color:var(--muted);font-size:9px;cursor:pointer;font-family:monospace;letter-spacing:1px">✕ eliminar</button>
       </div>`;
     }).join('');
   }

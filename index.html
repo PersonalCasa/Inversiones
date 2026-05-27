@@ -1572,12 +1572,12 @@ function updateTotal(){
 }
 
 function confirmarOperacion(){
-  // Leer ticker del campo si viene de "registrar compra" sin ticker predefinido
+  // Leer ticker — del campo si está visible, sino usar _modalTicker predefinido
   const fTicker = document.getElementById('fTicker');
-  if(fTicker && fTicker.offsetParent !== null && fTicker.value.trim()){
+  if(fTicker && fTicker.value.trim()){
     _modalTicker = fTicker.value.trim().toUpperCase();
   }
-  if(!_modalTicker){ alert('Seleccioná un instrumento'); return; }
+  if(!_modalTicker){ alert('Seleccioná un instrumento primero'); return; }
   const precio = parseFloat(document.getElementById('fPrecio').value);
   const units = parseFloat(document.getElementById('fUnidades').value);
   const fechaRaw = document.getElementById('fFecha').value;
@@ -1932,15 +1932,18 @@ async function abrirSimulador(){
 
 // ── NOTIFICACIONES PUSH ──
 async function toggleNotifications(){
-  if(!('Notification' in window)){ alert('Tu navegador no soporta notificaciones'); return; }
+  if(!('Notification' in window)){
+    alert('Tu navegador no soporta notificaciones push.');
+    return;
+  }
   if(Notification.permission === 'denied'){
-    alert('Notificaciones bloqueadas. Habilitálas en Ajustes del celular → Chrome → Notificaciones.');
+    alert('Notificaciones bloqueadas por el sistema.\n\nPara habilitarlas:\n1. Ajustes del celular\n2. Apps → Chrome\n3. Notificaciones → Activar\n4. Volvé a tocar la campana');
     return;
   }
   if(Notification.permission !== 'granted'){
     const perm = await Notification.requestPermission();
     if(perm !== 'granted'){
-      alert('Permiso denegado.');
+      alert('Permiso no concedido. Estado: ' + perm);
       return;
     }
   }
@@ -1949,10 +1952,12 @@ async function toggleNotifications(){
   localStorage.setItem('inv_notif', isOn ? '0' : '1');
   updateNotifBtn();
   if(!isOn){
-    new Notification('Inversiones — Alertas activadas ✅', {
-      body: 'Te avisaré cuando tus posiciones se muevan.',
-      icon: './icon-192.png'
-    });
+    try {
+      new Notification('🔔 Inversiones — Alertas ON', {
+        body: 'Recibirás alertas cuando tus posiciones se muevan.',
+        icon: './icon-192.png'
+      });
+    } catch(e){ console.log('Notif error:', e); }
   }
 }
 
@@ -1990,6 +1995,7 @@ function checkAlertNotifications(){
   if(typeof Notification === 'undefined') return;
   if(Notification.permission !== 'granted') return;
   if(localStorage.getItem('inv_notif') !== '1') return;
+  console.log('Checking alerts... holdings:', S.holdings?.length, 'cache keys:', Object.keys(S.cache||{}).length);
   if(localStorage.getItem('inv_notif') !== '1') return;
   const alerted = JSON.parse(sessionStorage.getItem('inv_alerted')||'{}');
 
@@ -2380,20 +2386,37 @@ Respondé en español rioplatense. Incluí: 1) ¿Es buen momento para la próxim
 }
 
 function probarNotificacion(){
-  if(typeof Notification === 'undefined'){ alert('Tu navegador no soporta notificaciones'); return; }
-  if(Notification.permission !== 'granted'){
-    alert('Permiso de notificaciones no concedido. Tocá la campana primero para activarlas.');
+  if(typeof Notification === 'undefined'){
+    alert('❌ Tu navegador no soporta notificaciones push.');
     return;
   }
-  if(localStorage.getItem('inv_notif') !== '1'){
-    alert('Las alertas están desactivadas. Tocá la campana para activarlas.');
+  const perm = Notification.permission;
+  const inv = localStorage.getItem('inv_notif');
+  
+  if(perm !== 'granted'){
+    alert('❌ Permiso: ' + perm + '\n\nTocá la campana para solicitarlo.\n\nSi dice "denied", debés habilitarlo en:\nAjustes del celular → Apps → Chrome → Notificaciones → Activar');
     return;
   }
-  new Notification('✅ Notificaciones funcionando', {
-    body: 'Las alertas están correctamente configuradas.',
-    icon: './icon-192.png'
-  });
-  alert('¡Funciona! Deberías haber recibido una notificación.');
+  if(inv !== '1'){
+    alert('❌ Alertas OFF\n\nTocá la campana (🔔) en la topbar para activarlas.');
+    return;
+  }
+  
+  // Intentar enviar notificación
+  try {
+    const n = new Notification('✅ Inversiones — Test', {
+      body: 'Las alertas están funcionando correctamente.',
+      icon: './icon-192.png',
+      badge: './icon-192.png'
+    });
+    n.onclick = () => window.focus();
+    // No mostrar alert — si llegó la notif es suficiente
+    setTimeout(()=>{
+      alert('Notificación enviada. ¿La recibiste?\n\nSi no llegó, verificá que Chrome tenga permisos de notificación en:\nAjustes → Apps → Chrome → Notificaciones');
+    }, 500);
+  } catch(e) {
+    alert('❌ Error al enviar: ' + e.message);
+  }
 }
 
 function consultarIALibre(){

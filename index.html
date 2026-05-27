@@ -521,7 +521,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <span>📊</span>
     <div><div style="font-size:11px">Analizar mi portfolio</div><div style="font-size:9px;color:var(--muted)">Holdings, P&L, diversificación, recomendaciones</div></div>
   </button>
-  <button onclick="probarNotificacion()" style="width:100%;padding:10px;border:1px dashed var(--border);border-radius:8px;background:transparent;color:var(--muted);font-family:DM Mono,monospace;font-size:9px;cursor:pointer;margin-bottom:16px;letter-spacing:1px">🔔 Probar notificación</button>
   <button class="ai-btn secondary" onclick="consultarIA('mercado')">
     <span>📰</span>
     <div><div style="font-size:11px">Reporte del mercado hoy</div><div style="font-size:9px;color:var(--muted)">Noticias + impacto en tus posiciones</div></div>
@@ -1572,12 +1571,13 @@ function updateTotal(){
 }
 
 function confirmarOperacion(){
-  // Leer ticker — del campo si está visible, sino usar _modalTicker predefinido
+  // Leer ticker — solo del campo si está visible (compra sin ticker predefinido)
   const fTicker = document.getElementById('fTicker');
-  if(fTicker && fTicker.value.trim()){
+  const tickerWrap = document.getElementById('tickerFieldWrap');
+  const tickerVisible = tickerWrap && tickerWrap.style.display !== 'none';
+  if(tickerVisible && fTicker && fTicker.value.trim()){
     _modalTicker = fTicker.value.trim().toUpperCase();
   }
-  console.log('confirmar op, ticker:', _modalTicker, 'tab:', _modalTab);
   if(!_modalTicker){ alert('Seleccioná un instrumento primero'); return; }
   const precio = parseFloat(document.getElementById('fPrecio').value);
   const units = parseFloat(document.getElementById('fUnidades').value);

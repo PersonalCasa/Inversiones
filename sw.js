@@ -1,4 +1,4 @@
-const CACHE = 'inversiones-v7';
+const CACHE = 'inversiones-v8';
 const ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png', './fingerprint-green.png'];
 
 self.addEventListener('install', e => {
@@ -24,5 +24,16 @@ self.addEventListener('fetch', e => {
         return r;
       })
       .catch(() => caches.match(e.request))
+  );
+});
+
+// Handler para clicks en notificaciones
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({type:'window'}).then(cls => {
+      if(cls.length) return cls[0].focus();
+      return clients.openWindow('/Inversiones/');
+    })
   );
 });

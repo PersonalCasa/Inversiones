@@ -540,6 +540,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <button class="btn" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:9px;padding:7px" onclick="exportarHistorial()">↓ Exportar historial</button>
     <button class="btn" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:9px;padding:7px" onclick="exportarPortfolio()">↓ Exportar portfolio</button>
   </div>
+  <div class="sec">Estadísticas de comisiones</div>
+  <div id="comStats" class="card" style="margin-bottom:10px"></div>
   <div class="sec">Historial</div>
   <div id="opsList"></div>
 </div>
@@ -1298,6 +1300,24 @@ function registrarVenta(){
   alert(`Venta registrada. P&L: ${pnl>=0?'+':''}U$S ${pnl.toFixed(2)} (${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%)`);
 }
 
+function renderComStats(){
+  const el = document.getElementById('comStats');
+  if(!el) return;
+  const ops = S.ops||[];
+  const compras = ops.filter(o=>o.tipo==='compra');
+  const ventas = ops.filter(o=>o.tipo==='venta');
+  const totalCom = ops.reduce((s,o)=>s+(o.comision||0),0);
+  const avgComCompra = compras.length ? compras.reduce((s,o)=>s+(o.comision||0),0)/compras.length : 0;
+  const avgComVenta = ventas.length ? ventas.reduce((s,o)=>s+(o.comision||0),0)/ventas.length : 0;
+  el.innerHTML = [
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">',
+    '<div style="text-align:center"><div style="font-size:8px;color:var(--muted);margin-bottom:3px">TOTAL PAGADO</div><div style="font-size:14px;color:var(--accent3)">U$S ' + totalCom.toFixed(2) + '</div></div>',
+    '<div style="text-align:center"><div style="font-size:8px;color:var(--muted);margin-bottom:3px">PROM. COMPRA</div><div style="font-size:14px">U$S ' + avgComCompra.toFixed(2) + '</div></div>',
+    '<div style="text-align:center"><div style="font-size:8px;color:var(--muted);margin-bottom:3px">PROM. VENTA</div><div style="font-size:14px">U$S ' + avgComVenta.toFixed(2) + '</div></div>',
+    '</div>'
+  ].join('');
+}
+
 function renderOps(){
   // Historial
   const list = document.getElementById('opsList');
@@ -1322,6 +1342,7 @@ function renderOps(){
     }).join('');
   }
 
+  renderComStats();
   setTimeout(applyValuesState, 50);
   // Posiciones cerradas
   const closed = document.getElementById('closedList');
@@ -1392,16 +1413,20 @@ async function loadFromGist(){
     const text = await r.text();
     if(!text || text.trim()==='{}') return false;
     const parsed = JSON.parse(text);
-    if(parsed && parsed.holdings && parsed.holdings.length > 0){
-      S = {...def(), ...parsed};
-      localStorage.setItem(KEY, JSON.stringify(S));
-      return true;
-    } else if(parsed && Object.keys(parsed).length > 1){
-      // Tiene datos pero quizás holdings vacío — igual cargar
-      S = {...def(), ...parsed};
-      if(!S.holdings) S.holdings = def().holdings;
-      localStorage.setItem(KEY, JSON.stringify(S));
-      return true;
+    if(parsed && Object.keys(parsed).length > 1){
+      // Comparar timestamps — usar el más reciente
+      const localTs = S.lastUpdate ? new Date(S.lastUpdate).getTime() : 0;
+      const gistTs = parsed.lastUpdate ? new Date(parsed.lastUpdate).getTime() : 0;
+      if(gistTs >= localTs){
+        S = {...def(), ...parsed};
+        if(!S.holdings) S.holdings = [];
+        localStorage.setItem(KEY, JSON.stringify(S));
+        return true;
+      } else {
+        // Local es más reciente — sincronizar Gist con local
+        syncToGist();
+        return false;
+      }
     }
   } catch(e){ console.log('Load error:', e.message); }
   return false;
@@ -1409,6 +1434,7 @@ async function loadFromGist(){
 
 // Sync con debounce — espera 2 segundos después del último cambio
 function save(){
+  S.lastUpdate = new Date().toISOString();
   localStorage.setItem(KEY, JSON.stringify(S));
   if(_syncTimeout) clearTimeout(_syncTimeout);
   _syncTimeout = setTimeout(syncToGist, 2000);
@@ -1474,6 +1500,14 @@ function updateTotal(){
   const total = precio * units;
   document.getElementById('fTotal').textContent = total > 0 ? 'U$S ' + total.toFixed(2) : 'U$S 0.00';
 
+  // Calcular comisión automática
+  const precio2 = parseFloat(document.getElementById('fPrecio').value)||0;
+  const units2 = parseFloat(document.getElementById('fUnidades').value)||0;
+  const total2 = precio2 * units2;
+  const comisionAuto = _modalTab==='buy' ? (total2*0.02+0.99) : (total2*0.01);
+  const fCom = document.getElementById('fComision');
+  if(fCom && !fCom.dataset.edited) fCom.value = comisionAuto > 0 ? comisionAuto.toFixed(2) : '';
+
   // P&L hint en venta
   if(_modalTab==='sell' && _modalHolding && precio > 0 && units > 0){
     const pnl = (precio - _modalHolding.buyPrice) * units;
@@ -1499,7 +1533,7 @@ function confirmarOperacion(){
   const total = precio * units;
 
   if(_modalTab === 'buy'){
-    const comision = total*0.02 + 0.99;
+    const comision = parseFloat(document.getElementById('fComision')?.value)||total*0.02+0.99;
     const op = { id:Date.now(), tipo:'compra', ticker:_modalTicker, fecha, precio, units, total, comision };
     S.ops = S.ops||[]; S.ops.unshift(op);
     const existing = S.holdings.find(h=>h.ticker===_modalTicker);
@@ -1520,7 +1554,7 @@ function confirmarOperacion(){
     if(units > holding.units){ alert(`Solo tenés ${holding.units.toFixed(4)} unidades`); return; }
     const pnl = (precio - holding.buyPrice) * units;
     const pnlPct = (precio - holding.buyPrice)/holding.buyPrice*100;
-    const comision = total*0.01;
+    const comision = parseFloat(document.getElementById('fComision')?.value)||total*0.01;
     const op = { id:Date.now(), tipo:'venta', ticker:_modalTicker, fecha, precio, units, total, pnl, pnlPct, buyPrice:holding.buyPrice, comision };
     S.ops = S.ops||[]; S.ops.unshift(op);
     holding.units -= units;
@@ -1529,8 +1563,13 @@ function confirmarOperacion(){
       S.closed.unshift({ticker:holding.ticker,name:holding.name,fechaVenta:fecha,buyPrice:holding.buyPrice,sellPrice:precio,units,pnl,pnlPct});
       S.holdings = S.holdings.filter(h=>h.ticker!==_modalTicker);
     }
-    save(); renderHoldings(); renderOps();
-    closeTradeModalDirect();
+    // Sincronizar inmediatamente (sin debounce) para ventas
+    localStorage.setItem(KEY, JSON.stringify(S));
+    syncToGist().then(()=>{
+      renderHoldings(); renderOps();
+      closeTradeModalDirect();
+    });
+    renderHoldings(); renderOps(); // render inmediato también
   }
 }
 
@@ -2596,6 +2635,10 @@ initAuth();
     <div class="form-field">
       <label class="form-label">Unidades <span id="fUnitsHint" style="color:var(--muted);font-size:9px"></span></label>
       <input class="form-input" id="fUnidades" type="number" step="0.0001" placeholder="0.0000" oninput="updateTotal()">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Comisión U$S <span style="color:var(--muted);font-size:9px">(se calcula automáticamente)</span></label>
+      <input class="form-input" id="fComision" type="number" step="0.01" placeholder="0.00" oninput="this.dataset.edited='1'">
     </div>
     <div class="form-total">
       <span class="form-total-label">Total operación</span>

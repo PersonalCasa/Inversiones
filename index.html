@@ -511,6 +511,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
     <span>📊</span>
     <div><div style="font-size:11px">Analizar mi portfolio</div><div style="font-size:9px;color:var(--muted)">Holdings, P&L, diversificación, recomendaciones</div></div>
   </button>
+  <button onclick="probarNotificacion()" style="width:100%;padding:10px;border:1px dashed var(--border);border-radius:8px;background:transparent;color:var(--muted);font-family:DM Mono,monospace;font-size:9px;cursor:pointer;margin-bottom:16px;letter-spacing:1px">🔔 Probar notificación</button>
   <button class="ai-btn secondary" onclick="consultarIA('mercado')">
     <span>📰</span>
     <div><div style="font-size:11px">Reporte del mercado hoy</div><div style="font-size:9px;color:var(--muted)">Noticias + impacto en tus posiciones</div></div>
@@ -1298,6 +1299,15 @@ function registrarVenta(){
   }
   save(); renderOps(); renderHoldings();
   alert(`Venta registrada. P&L: ${pnl>=0?'+':''}U$S ${pnl.toFixed(2)} (${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%)`);
+}
+
+function eliminarOp(id){
+  if(!confirm('¿Eliminar esta operación del historial?')) return;
+  S.ops = (S.ops||[]).filter(o=>o.id!==id);
+  S.lastUpdate = new Date().toISOString();
+  localStorage.setItem(KEY, JSON.stringify(S));
+  syncToGist();
+  renderOps();
 }
 
 function renderComStats(){
@@ -2323,6 +2333,23 @@ Respondé en español rioplatense. Incluí: 1) ¿Es buen momento para la próxim
   // Abrir Claude.ai con el prompt pre-cargado
   abrirClaudeConPrompt(prompts[tipo]);
   el.classList.remove('visible');
+}
+
+function probarNotificacion(){
+  if(typeof Notification === 'undefined'){ alert('Tu navegador no soporta notificaciones'); return; }
+  if(Notification.permission !== 'granted'){
+    alert('Permiso de notificaciones no concedido. Tocá la campana primero para activarlas.');
+    return;
+  }
+  if(localStorage.getItem('inv_notif') !== '1'){
+    alert('Las alertas están desactivadas. Tocá la campana para activarlas.');
+    return;
+  }
+  new Notification('✅ Notificaciones funcionando', {
+    body: 'Las alertas están correctamente configuradas.',
+    icon: './icon-192.png'
+  });
+  alert('¡Funciona! Deberías haber recibido una notificación.');
 }
 
 function consultarIALibre(){

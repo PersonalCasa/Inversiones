@@ -269,6 +269,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;
   padding:14px;margin-top:10px;font-size:11px;line-height:1.7;display:none}
 .ai-response.visible{display:block}
 .ai-loading{text-align:center;padding:20px;color:var(--muted);font-size:10px}
+
+.autocomplete-wrap{position:relative}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--bg2);
+  border:1px solid var(--accent);border-radius:8px;z-index:600;max-height:180px;
+  overflow-y:auto;margin-top:2px}
+.autocomplete-item{padding:10px 14px;cursor:pointer;font-size:12px;
+  display:flex;justify-content:space-between;align-items:center;transition:background .15s}
+.autocomplete-item:hover,.autocomplete-item.selected{background:rgba(0,212,168,0.1)}
+.autocomplete-item .ac-ticker{font-weight:500;color:var(--accent)}
+.autocomplete-item .ac-name{font-size:10px;color:var(--muted)}
 .spinner{display:inline-block;width:11px;height:11px;border:2px solid var(--border);
   border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-left:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -681,6 +691,22 @@ async function refreshAll(){
   else ab.classList.remove('show');
 
   renderHoldings();
+
+  // Actualizar caché de precios para alertas de mercado
+  // Solo los seguidos + posiciones propias (no toda la MKT_LIST para no saturar API)
+  const alertTickers = [...new Set([
+    ...(S.seguidos||[]),
+    ...(S.holdings||[]).map(h=>h.ticker)
+  ])].filter(t=>!S.holdings.find(h=>h.ticker===t)); // excluir los que ya se actualizaron arriba
+
+  for(const ticker of alertTickers.slice(0,10)){
+    const d = await fetchFinnhub(ticker);
+    if(d){
+      S.cache = S.cache||{};
+      S.cache[ticker] = { price:d.price, prevClose:d.prevClose, dayChange:d.dayChange };
+    }
+  }
+
   checkAlertNotifications();
   if(curPage==='mercado'){
     const activeTab = document.querySelector('.mtab.active');
@@ -1464,12 +1490,23 @@ let _modalTab = 'buy';
 let _modalHolding = null;
 
 function openTradeModal(ticker, price, tab='buy'){
-  _modalTicker = ticker;
+  _modalTicker = ticker||'';
   _modalPrice = parseFloat(price)||0;
   _modalTab = tab;
   _modalHolding = S.holdings.find(h=>h.ticker===ticker)||null;
 
-  document.getElementById('modalTicker').textContent = ' · ' + ticker;
+  // Campo ticker — mostrar si no viene predefinido
+  const tickerWrap = document.getElementById('tickerFieldWrap');
+  const fTicker = document.getElementById('fTicker');
+  if(ticker){
+    tickerWrap.style.display = 'none';
+    document.getElementById('modalTicker').textContent = ' · ' + ticker;
+  } else {
+    tickerWrap.style.display = 'block';
+    if(fTicker){ fTicker.value = ''; }
+    document.getElementById('modalTicker').textContent = '';
+  }
+
   document.getElementById('fFecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('fPrecio').value = _modalPrice > 0 ? _modalPrice.toFixed(2) : '';
   document.getElementById('fUnidades').value = '';
@@ -1535,6 +1572,12 @@ function updateTotal(){
 }
 
 function confirmarOperacion(){
+  // Leer ticker del campo si viene de "registrar compra" sin ticker predefinido
+  const fTicker = document.getElementById('fTicker');
+  if(fTicker && fTicker.offsetParent !== null && fTicker.value.trim()){
+    _modalTicker = fTicker.value.trim().toUpperCase();
+  }
+  if(!_modalTicker){ alert('Seleccioná un instrumento'); return; }
   const precio = parseFloat(document.getElementById('fPrecio').value);
   const units = parseFloat(document.getElementById('fUnidades').value);
   const fechaRaw = document.getElementById('fFecha').value;
@@ -2370,6 +2413,55 @@ function consultarIALibre(){
   abrirClaudeConPrompt(prompt);
 }
 
+
+// ══ AUTOCOMPLETE ══
+function acSearch(val){
+  const list = document.getElementById('acList');
+  if(!val || val.length < 1){ acHide(); return; }
+  const q = val.toUpperCase();
+  const matches = MKT_LIST.filter(x=>
+    x.t.toUpperCase().includes(q) || x.n.toUpperCase().includes(q)
+  ).slice(0, 8);
+  if(!matches.length){ acHide(); return; }
+  list.style.display = 'block';
+  list.innerHTML = matches.map(x=>
+    '<div class="autocomplete-item" onmousedown="acSelect(\''+x.t+'\',\''+x.n+'\')">' +
+    '<span class="ac-ticker">'+x.t+'</span>' +
+    '<span class="ac-name">'+x.n+'</span>' +
+    '</div>'
+  ).join('');
+}
+
+function acSelect(ticker, name){
+  document.getElementById('fTicker').value = ticker;
+  _modalTicker = ticker;
+  document.getElementById('modalTicker').textContent = ' · ' + ticker;
+  // Cargar precio actual si está en caché
+  const cached = S.cache?.[ticker];
+  if(cached && cached.price){
+    const fPrecio = document.getElementById('fPrecio');
+    if(fPrecio && !fPrecio.value) fPrecio.value = cached.price.toFixed(2);
+    document.getElementById('fPriceHint').textContent = 'precio actual: U$S ' + cached.price.toFixed(2);
+  }
+  // Si es venta, cargar datos del holding
+  if(_modalTab === 'sell'){
+    const h = S.holdings.find(h=>h.ticker===ticker);
+    if(h){
+      document.getElementById('fPriceHint').textContent = 'promedio compra: U$S ' + h.buyPrice.toFixed(2);
+      document.getElementById('fUnitsHint').textContent = 'tenés ' + h.units.toFixed(4);
+      if(!document.getElementById('fPrecio').value)
+        document.getElementById('fPrecio').value = h.currentPrice.toFixed(2);
+    }
+  }
+  acHide();
+  document.getElementById('fPrecio').focus();
+}
+
+function acHide(){
+  const list = document.getElementById('acList');
+  if(list) list.style.display = 'none';
+}
+
 // ══ AUTH SYSTEM ══
 const AUTH_KEY = 'inv_auth';
 let pinBuffer = '';
@@ -2647,6 +2739,12 @@ initAuth();
     <div class="modal-header">
       <div class="modal-title">Operación<span class="modal-ticker" id="modalTicker"></span></div>
       <button class="modal-close" onclick="closeTradeModalDirect()">✕</button>
+    </div>
+    <div class="form-field autocomplete-wrap" id="tickerFieldWrap">
+      <label class="form-label">Instrumento</label>
+      <input class="form-input" id="fTicker" type="text" placeholder="Escribí ticker o nombre..." 
+        autocomplete="off" oninput="acSearch(this.value)" onblur="setTimeout(()=>acHide(),200)">
+      <div class="autocomplete-list" id="acList" style="display:none"></div>
     </div>
     <div class="modal-tabs">
       <button class="modal-tab buy active" id="tabBuy" onclick="setModalTab('buy')">COMPRA</button>
